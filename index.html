@@ -2101,13 +2101,29 @@ canvas.addEventListener("pointerdown",event=>{
     }
     if(!chosen) return;
     if(chosen.bot&&chosen.id!==state.seatIndex){
-        notice(`Chiếu này đang có ${chosen.bot.name} ngồi.`);
+        notice(`Chiếu này đang có ${chosen.bot.name} sử dụng.`);
         return;
     }
+
+    if (chosen.id === state.seatIndex) {
+	if (!state.meditating) {
+            state.meditating = true;
+	    syncUI();
+
+	    floatText(
+           	 "Đã Nhập Thiền",
+           	 chosen.x,
+          	  chosen.y - 42,
+           	 "#a7f3d0"
+	    );
+    	}
+        return;
+    }
+
     state.seatIndex=chosen.id;
     state.meditating=true;
     syncUI();
-    floatText("Đã đổi chỗ ngồi",chosen.x,chosen.y-42,"#a7f3d0");
+    floatText("Đã chuyển sang chỗ mới",chosen.x,chosen.y-42,"#a7f3d0");
 });
 
 $("chatForm").addEventListener("submit",event=>{
@@ -4028,13 +4044,14 @@ body.bubble-mode #cinemaScreen {
         cancelAnimationFrame(layoutFrame);
 
         layoutFrame = requestAnimationFrame(() => {
-            if (window.anlacBubbleActive) return;
+            if (
+		window.anlacBubbleActive ||
+		window.anlacDojoActive 
+	    ) {
+		return;
+	    }
 
-            /*
-             * Hàm resize cũ đo lại HUD/thanh nút và cập nhật
-             * vùng canvas. Sau đó định vị video theo vùng trống.
-             */
-            resize();
+            positionCinemaScreen();
         });
     }
 
