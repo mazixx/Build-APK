@@ -12,27 +12,35 @@ jobs:
       - name: 1. Tai code tu kho chua
         uses: actions/checkout@v4
 
-      - name: 2. Cai dat Node.js
+      - name: 2. Cai dat Node.js 22
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
 
-      - name: 3. Cai dat Java JDK 17
+      - name: 3. Cai dat Java JDK 21 (Chuan moi nhat cho Android)
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
-          java-version: 17
+          java-version: 21
 
-      - name: 4. Dong goi HTML thanh App Android (Chong loi YouTube 153)
+      - name: 4. Dong goi HTML thanh App Android
         run: |
           mkdir -p www
-          cp index.html www/index.html
+          # Tu dong tim file .html cua ban (du ban dat ten la index.html hay ten khac)
+          HTML_FILE=$(find . -maxdepth 1 -iname "*.html" | head -n 1)
+          if [ -n "$HTML_FILE" ]; then
+            cp "$HTML_FILE" www/index.html
+          else
+            echo "<h1>Chua tim thay file index.html</h1>" > www/index.html
+          fi
+
           npm init -y
-          npm install @capacitor/core @capacitor/cli @capacitor/android
+          npm install @capacitor/core@6 @capacitor/cli@6 @capacitor/android@6
+
           cat << 'EOF' > capacitor.config.json
           {
             "appId": "com.chuaanlac.game",
-            "appName": "Chùa An Lạc",
+            "appName": "Chua An Lac",
             "webDir": "www",
             "server": {
               "androidScheme": "http",
@@ -41,15 +49,13 @@ jobs:
             }
           }
           EOF
-          npx cap add android
-          npx cap sync
 
-          # Bat quyen truy cap Internet cho App Android
-          sed -i 's/<application/<uses-permission android:name="android.permission.INTERNET" \/>\n    <application android:usesCleartextTraffic="true"/g' android/app/src/main/AndroidManifest.xml
+          npx cap add android
+          npx cap sync android
 
           cd android
           chmod +x gradlew
-          ./gradlew assembleDebug
+          ./gradlew assembleDebug --no-daemon
 
       - name: 5. Xuat file APK de tai ve
         uses: actions/upload-artifact@v4
