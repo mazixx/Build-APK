@@ -923,7 +923,7 @@ function floatText(text,x,y,color="#fde68a") {
 }
 
 function resize() {
-    if (window.anlacBubbleActive) return;
+    if (window.anlacBubbleActive || window.anlacDojoActive) return;
     W=window.innerWidth;
     H=window.innerHeight;
     DPR=Math.min(window.devicePixelRatio||1,2);
@@ -2555,7 +2555,7 @@ let lastTime = performance.now();
 function loop(now) {
     const dt = clamp((now - lastTime) / 1000, 0, .08);
     lastTime = now;
-    if (window.anlacBubbleActive) {
+    if (window.anlacBubbleActive || window.anlacDojoActive) {
         requestAnimationFrame(loop);
         return;
     }
@@ -4092,6 +4092,1233 @@ body.bubble-mode #cinemaScreen {
 
     updateCinemaClasses();
     requestLayout();
+})();
+</script>
+<!-- ================= VÕ ĐƯỜNG THIẾU LÂM ================= -->
+<style>
+body.dojo-mode #hud,
+body.dojo-mode #controls,
+body.dojo-mode #templeCanvas,
+body.dojo-mode #cinemaScreen,
+body.dojo-mode #cinemaDimOverlay,
+body.dojo-mode #notice,
+body.dojo-mode #bubbleGame,
+body.dojo-mode .modal {
+    display: none !important;
+}
+
+#dojoApp {
+    position: fixed;
+    inset: 0;
+    z-index: 70;
+    height: 100%;
+    height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    padding:
+        max(8px, env(safe-area-inset-top))
+        max(8px, env(safe-area-inset-right))
+        max(8px, env(safe-area-inset-bottom))
+        max(8px, env(safe-area-inset-left));
+    background: #100e17;
+    color: #fff3cf;
+    overflow: hidden;
+    font-family: system-ui, sans-serif;
+}
+
+#dojoApp[hidden] { display: none !important; }
+
+#dojoApp button,
+#dojoApp select {
+    min-height: 42px;
+    padding: 8px 12px;
+    border: 1px solid #9c7948;
+    border-radius: 11px;
+    background: #271f29;
+    color: #fff3cf;
+    font: inherit;
+    font-size: 13px;
+    touch-action: manipulation;
+}
+
+#dojoApp button:disabled {
+    opacity: .45;
+    cursor: not-allowed;
+}
+
+#dojoApp .dj-primary {
+    background: #165444;
+    border-color: #6ee7b7;
+}
+
+.dj-header,
+.dj-footer {
+    flex: 0 0 auto;
+    width: min(1000px, 100%);
+    margin: 0 auto;
+}
+
+.dj-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+}
+
+.dj-title {
+    font-size: 18px;
+    color: #fcd34d;
+}
+
+.dj-stats {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 5px 16px;
+    padding: 7px;
+    margin-top: 6px;
+    border-radius: 12px;
+    background: #ffffff08;
+    font-size: 12px;
+    font-variant-numeric: tabular-nums;
+}
+
+.dj-stats b { color: #6ee7b7; }
+
+#djStage {
+    position: relative;
+    flex: 1 1 auto;
+    min-height: 100px;
+    overflow: hidden;
+    border: 1px solid #ab85444d;
+    border-radius: 16px;
+    background: #191729;
+}
+
+#djCanvas {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    display: block;
+    width: 100%;
+    height: 100%;
+    touch-action: auto;
+}
+
+#djFeedback {
+    position: absolute;
+    top: 8%;
+    left: 0;
+    right: 0;
+    text-align: center;
+    font-size: clamp(20px, 4vw, 36px);
+    font-weight: 900;
+    color: #fde68a;
+    text-shadow: 0 3px 14px #000;
+    pointer-events: none;
+}
+
+#djResult {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 14px;
+    background: #080811b8;
+}
+
+#djResult[hidden] { display: none !important; }
+
+.dj-result-card {
+    width: min(480px, 100%);
+    max-height: 100%;
+    overflow-y: auto;
+    padding: 20px;
+    background: linear-gradient(135deg, #302237, #111b27);
+    border: 1px solid #c4a566;
+    border-radius: 18px;
+    text-align: center;
+    box-shadow: 0 10px 40px #0008;
+}
+
+.dj-result-card h2 { color: #fde68a; margin: 0 0 10px; }
+.dj-result-card p { line-height: 1.6; font-size: 14px; }
+
+#djTrack {
+    position: relative;
+    height: 72px;
+    overflow: hidden;
+    border-radius: 12px;
+    background: linear-gradient(90deg, #111a28, #252238);
+    border: 1px solid #655371;
+}
+
+#djTarget {
+    position: absolute;
+    left: 22%;
+    top: 5px;
+    bottom: 5px;
+    width: 48px;
+    transform: translateX(-50%);
+    border: 2px solid #fde68a;
+    border-radius: 10px;
+    background: #fde68a10;
+    box-shadow: 0 0 18px #fde68a20;
+}
+
+#djTrack::after {
+    content: "NHẤN KHI MŨI TÊN VÀO Ô VÀNG";
+    position: absolute;
+    right: 8px;
+    bottom: 3px;
+    font-size: 8px;
+    color: #d9c8a9;
+    pointer-events: none;
+}
+
+.dj-note {
+    position: absolute;
+    top: 9px;
+    width: 44px;
+    height: 44px;
+    display: grid;
+    place-items: center;
+    transform: translateX(-50%);
+    border-radius: 10px;
+    border: 1px solid #fff8;
+    color: #07121a;
+    font-size: 30px;
+    font-weight: 900;
+    box-shadow: 0 3px 8px #0006;
+}
+
+#djMessage {
+    min-height: 20px;
+    margin: 5px 0;
+    text-align: center;
+    font-size: 12px;
+    color: #e4d6b4;
+}
+
+.dj-pads {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    width: min(560px, 100%);
+    margin: 0 auto;
+}
+
+#dojoApp .dj-pad {
+    min-height: 62px;
+    padding: 4px;
+    background: #172536;
+    border: 2px solid var(--pad-color);
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: none;
+}
+
+.dj-pad strong {
+    display: block;
+    font-size: 30px;
+    line-height: 1;
+    color: var(--pad-color);
+}
+
+.dj-pad small { font-size: 10px; color: #d1d5db; }
+
+#dojoApp .dj-pad.pressed {
+    background: var(--pad-color);
+    box-shadow: 0 0 20px var(--pad-color);
+}
+
+#dojoApp .dj-pad.pressed strong,
+#dojoApp .dj-pad.pressed small { color: #102030; }
+
+.dj-settings {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 7px;
+}
+
+.dj-settings label {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 12px;
+}
+
+@media (max-width: 560px) {
+    .dj-title { font-size: 13px; }
+    #dojoApp { gap: 5px; }
+    #dojoApp button, #dojoApp select {
+        padding: 7px 9px;
+        font-size: 12px;
+    }
+    .dj-stats { font-size: 10px; gap: 4px 9px; }
+    #dojoApp .dj-pad { min-height: 54px; }
+    .dj-settings { gap: 4px; }
+}
+
+@media (max-height: 570px) {
+    .dj-stats { padding: 3px; margin-top: 3px; }
+    #djTrack { height: 55px; }
+    .dj-note { top: 4px; width: 38px; height: 38px; font-size: 26px; }
+    #dojoApp .dj-pad { min-height: 43px; }
+    .dj-pad small { display: none; }
+    .dj-settings { margin-top: 3px; }
+    #djMessage { margin: 2px; font-size: 10px; }
+    #dojoApp { gap: 3px; }
+}
+</style>
+
+<section id="dojoApp" hidden aria-label="Võ đường luyện nhịp">
+    <header class="dj-header">
+        <div class="dj-top">
+            <button id="djBack" type="button">← Về Chánh Điện</button>
+            <strong class="dj-title">🥋 VÕ ĐƯỜNG THIẾU LÂM</strong>
+            <button id="djSound" type="button" aria-pressed="false">
+                🔇 Nhịp
+            </button>
+        </div>
+
+        <div class="dj-stats">
+            <span>Màn <b id="djLevelText">1</b>/20</span>
+            <span>Còn <b id="djTime">—</b></span>
+            <span>Điểm <b id="djScore">0</b></span>
+            <span>Combo <b id="djCombo">0</b></span>
+            <span>Chính xác <b id="djAccuracy">—</b></span>
+            <span>Nhận <b id="djMerit">0</b> công đức</span>
+        </div>
+    </header>
+
+    <div id="djStage">
+        <canvas id="djCanvas" aria-label="Các võ tăng biểu diễn theo nhịp"></canvas>
+        <div id="djFeedback"></div>
+
+        <div id="djResult" hidden>
+            <div class="dj-result-card">
+                <h2 id="djResultTitle"></h2>
+                <p id="djResultText"></p>
+                <button id="djContinue" type="button" class="dj-primary"></button>
+                <button id="djDismiss" type="button">Xem võ tăng</button>
+            </div>
+        </div>
+    </div>
+
+    <footer class="dj-footer">
+        <div id="djTrack" aria-label="Mũi tên chạy từ phải sang trái">
+            <div id="djTarget"></div>
+        </div>
+
+        <div id="djMessage" role="status">
+            Bấm Tham gia. Chạm đúng mũi tên khi nó vào ô vàng.
+        </div>
+
+        <div class="dj-pads">
+            <button class="dj-pad" data-dir="0" type="button"
+                    aria-label="Trái" style="--pad-color:#60a5fa">
+                <strong>←</strong><small>A / Trái</small>
+            </button>
+            <button class="dj-pad" data-dir="1" type="button"
+                    aria-label="Lên" style="--pad-color:#4ade80">
+                <strong>↑</strong><small>W / Lên</small>
+            </button>
+            <button class="dj-pad" data-dir="2" type="button"
+                    aria-label="Xuống" style="--pad-color:#facc15">
+                <strong>↓</strong><small>S / Xuống</small>
+            </button>
+            <button class="dj-pad" data-dir="3" type="button"
+                    aria-label="Phải" style="--pad-color:#fb7185">
+                <strong>→</strong><small>D / Phải</small>
+            </button>
+        </div>
+
+        <div class="dj-settings">
+            <label>
+                Độ khó
+                <select id="djDifficulty">
+                    <option value="easy">Dễ</option>
+                    <option value="normal" selected>Thường</option>
+                    <option value="hard">Khó</option>
+                </select>
+            </label>
+
+            <label>
+                Màn
+                <select id="djLevelSelect"></select>
+            </label>
+
+            <button id="djStart" type="button" class="dj-primary">▶ Tham gia</button>
+            <button id="djPause" type="button" disabled>⏸ Dừng</button>
+        </div>
+    </footer>
+</section>
+
+<script>
+(() => {
+    "use strict";
+
+    if (window.anlacDojoInstalled) return;
+    window.anlacDojoInstalled = true;
+    window.anlacDojoActive = false;
+
+    const $d = id => document.getElementById(id);
+    const root = $d("dojoApp");
+    const canvas = $d("djCanvas");
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    const entrance = document.createElement("button");
+    entrance.type = "button";
+    entrance.className = "purple";
+    entrance.textContent = "🥋 Võ Đường";
+    document.querySelector(".zone-buttons")?.appendChild(entrance);
+
+    const ARROWS = ["←", "↑", "↓", "→"];
+    const COLORS = ["#60a5fa", "#4ade80", "#facc15", "#fb7185"];
+
+    const DIFFICULTY = {
+        easy:   { speed: .82, window: .34, pass: 55 },
+        normal: { speed: 1,   window: .27, pass: 65 },
+        hard:   { speed: 1.2, window: .20, pass: 75 }
+    };
+
+    const clampD = (v, a, b) => Math.max(a, Math.min(b, v));
+    const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    let progress = { easy: 1, normal: 1, hard: 1 };
+
+    try {
+        const saved = JSON.parse(localStorage.getItem("anlac_dojo_progress") || "{}");
+        for (const key of Object.keys(progress)) {
+            progress[key] = clampD(Math.trunc(Number(saved[key])) || 1, 1, 20);
+        }
+    } catch (_) {}
+
+    const d = {
+        phase: "watch",
+        difficulty: "normal",
+        level: 1,
+        bpm: 80,
+        interval: .75,
+        hitWindow: .27,
+        notes: [],
+        index: 0,
+        time: 0,
+        duration: 0,
+        score: 0,
+        combo: 0,
+        maxCombo: 0,
+        perfect: 0,
+        good: 0,
+        miss: 0,
+        extra: 0,
+        merit: 0,
+        visual: 0,
+        last: 0,
+        raf: 0,
+        move: 0,
+        moveAt: -10,
+        feedbackUntil: 0,
+        lastBeat: -1,
+        paused: false,
+        sound: false,
+        audio: null,
+        passed: false
+    };
+
+    let viewW = 800, viewH = 400;
+    const padTimers = new Map();
+
+    function selectedDifficulty() {
+        return $d("djDifficulty").value;
+    }
+
+    function saveProgress() {
+        try {
+            localStorage.setItem("anlac_dojo_progress", JSON.stringify(progress));
+        } catch (_) {}
+    }
+
+    function fillLevels(preferred = 1) {
+        const max = progress[selectedDifficulty()];
+        const select = $d("djLevelSelect");
+        select.replaceChildren();
+
+        for (let level = 1; level <= max; level++) {
+            const option = document.createElement("option");
+            option.value = level;
+            option.textContent = String(level);
+            select.appendChild(option);
+        }
+        select.value = String(clampD(preferred, 1, max));
+        $d("djLevelText").textContent = select.value;
+    }
+
+    function isRunning() {
+        return d.phase === "play";
+    }
+
+    function accuracy() {
+        const total = d.perfect + d.good + d.miss + d.extra;
+        if (!total) return 0;
+        return Math.round((d.perfect + d.good * .8) / total * 100);
+    }
+
+    function updateHUD() {
+        $d("djScore").textContent = d.score.toLocaleString("vi-VN");
+        $d("djCombo").textContent = d.combo;
+        $d("djMerit").textContent = "+" + d.merit;
+        $d("djAccuracy").textContent =
+            d.perfect + d.good + d.miss + d.extra
+                ? accuracy() + "%"
+                : "—";
+
+        $d("djTime").textContent = isRunning()
+            ? Math.max(0, Math.ceil(d.duration - d.time)) + "s"
+            : "—";
+
+        $d("djPause").disabled = !isRunning();
+        $d("djPause").textContent = d.paused ? "▶ Tiếp" : "⏸ Dừng";
+
+        $d("djStart").disabled = isRunning();
+        $d("djDifficulty").disabled = isRunning();
+        $d("djLevelSelect").disabled = isRunning();
+    }
+
+    function feedback(text, color = "#fde68a") {
+        $d("djFeedback").textContent = text;
+        $d("djFeedback").style.color = color;
+        d.feedbackUntil = d.visual + .65;
+    }
+
+    function beep(accent = false) {
+        if (!d.sound) return;
+
+        try {
+            const AC = window.AudioContext || window.webkitAudioContext;
+            if (!AC) return;
+            if (!d.audio) d.audio = new AC();
+            if (d.audio.state !== "running") return;
+
+            const osc = d.audio.createOscillator();
+            const gain = d.audio.createGain();
+            const now = d.audio.currentTime;
+
+            osc.frequency.value = accent ? 880 : 520;
+            osc.type = "sine";
+            gain.gain.setValueAtTime(.07, now);
+            gain.gain.exponentialRampToValueAtTime(.001, now + .08);
+            osc.connect(gain);
+            gain.connect(d.audio.destination);
+            osc.start(now);
+            osc.stop(now + .08);
+            osc.onended = () => {
+                osc.disconnect();
+                gain.disconnect();
+            };
+        } catch (_) {}
+    }
+
+    function unlockAudio() {
+        if (!d.sound) return;
+        try {
+            const AC = window.AudioContext || window.webkitAudioContext;
+            if (!AC) return;
+            if (!d.audio) d.audio = new AC();
+            d.audio.resume().catch(() => {});
+        } catch (_) {}
+    }
+
+    function fit() {
+        if (!window.anlacDojoActive) return;
+        const rect = $d("djStage").getBoundingClientRect();
+        viewW = Math.max(1, rect.width);
+        viewH = Math.max(1, rect.height);
+
+        const ratio = Math.min(devicePixelRatio || 1, 2);
+        canvas.width = Math.round(viewW * ratio);
+        canvas.height = Math.round(viewH * ratio);
+        ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+    }
+
+    function enter() {
+        if (window.anlacDojoActive || window.anlacBubbleActive) return;
+
+        // Dừng nội dung rạp nếu mở Võ Đường từ một khu vực khác.
+        const cinema = $d("cinemaScreen");
+        cinema?.querySelector("video")?.pause();
+        cinema?.replaceChildren();
+
+        if (typeof ytPopupWindow !== "undefined" &&
+            ytPopupWindow && !ytPopupWindow.closed) {
+            ytPopupWindow.close();
+        }
+
+        // Khi thoát sẽ trở về Chánh Điện.
+        switchZone("INDOOR");
+        state.chanting = false;
+
+        window.anlacDojoActive = true;
+        document.body.classList.add("dojo-mode");
+        root.hidden = false;
+
+        d.phase = "watch";
+        d.paused = false;
+        $d("djResult").hidden = true;
+        $d("djFeedback").textContent = "";
+        clearNotes();
+
+        fillLevels(Number($d("djLevelSelect").value) || 1);
+        $d("djMessage").textContent =
+            "Xem võ tăng biểu diễn hoặc bấm Tham gia. Mũi tên chạy từ phải sang ô vàng.";
+
+        updateHUD();
+        fit();
+        d.last = performance.now();
+        cancelAnimationFrame(d.raf);
+        d.raf = requestAnimationFrame(frame);
+        $d("djStart").focus();
+    }
+
+    function exit() {
+        if (!window.anlacDojoActive) return;
+
+        if (isRunning() && !confirm("Rời bài luyện hiện tại và về Chánh Điện?")) {
+            return;
+        }
+
+        window.anlacDojoActive = false;
+        cancelAnimationFrame(d.raf);
+        d.phase = "watch";
+        d.paused = false;
+        clearNotes();
+
+        root.hidden = true;
+        document.body.classList.remove("dojo-mode");
+        switchZone("INDOOR");
+        resize();
+        entrance.focus();
+    }
+
+    function clearNotes() {
+        for (const note of d.notes) note.element?.remove();
+        d.notes = [];
+    }
+
+    function start() {
+        if (!window.anlacDojoActive || isRunning()) return;
+
+        unlockAudio();
+        clearNotes();
+
+        d.difficulty = selectedDifficulty();
+        d.level = Number($d("djLevelSelect").value) || 1;
+
+        const config = DIFFICULTY[d.difficulty];
+
+        // Màn 1–10 tăng nhẹ; từ màn 11 tăng nhanh hơn.
+        const baseBpm = d.level <= 10
+            ? 76 + (d.level - 1) * 3
+            : 103 + (d.level - 10) * 5;
+
+        d.bpm = baseBpm * config.speed;
+        d.interval = 60 / d.bpm;
+
+        // Không để cửa sổ chấm điểm của hai nốt chồng quá nhiều.
+        d.hitWindow = Math.min(
+            config.window,
+            d.interval * .44
+        );
+
+        const count = 20 + (d.level - 1) * 2;
+        const countdown = d.interval * 4;
+
+        d.index = 0;
+        d.time = 0;
+        d.score = 0;
+        d.combo = 0;
+        d.maxCombo = 0;
+        d.perfect = 0;
+        d.good = 0;
+        d.miss = 0;
+        d.extra = 0;
+        d.lastBeat = -1;
+        d.paused = false;
+        d.passed = false;
+        d.phase = "play";
+
+        const patterns = [
+            [0, 1, 2, 3],
+            [0, 3, 0, 3],
+            [1, 2, 1, 2],
+            [0, 0, 3, 3],
+            [1, 3, 2, 0],
+            [2, 0, 1, 3]
+        ];
+
+        let pattern = patterns[0];
+
+        for (let i = 0; i < count; i++) {
+            if (i % 4 === 0) {
+                pattern = patterns[Math.floor(Math.random() * patterns.length)];
+            }
+
+            // Các màn sau có thêm nốt ngẫu nhiên.
+            const direction = d.level > 10 && Math.random() < .25
+                ? Math.floor(Math.random() * 4)
+                : pattern[i % 4];
+
+            d.notes.push({
+                direction,
+                target: countdown + i * d.interval,
+                done: false,
+                element: null
+            });
+        }
+
+        d.duration = d.notes[count - 1].target + d.hitWindow + .65;
+
+        $d("djResult").hidden = true;
+        $d("djLevelText").textContent = d.level;
+        $d("djMessage").textContent =
+            `Màn ${d.level} · ${Math.round(d.bpm)} BPM · ` +
+            `Cần ${config.pass}% chính xác · ${Math.ceil(d.duration)} giây.`;
+
+        feedback("CHUẨN BỊ");
+        updateHUD();
+    }
+
+    function judge(note, result) {
+        note.done = true;
+        note.element?.remove();
+        note.element = null;
+
+        if (result === "perfect") {
+            d.perfect++;
+            d.combo++;
+            d.score += 100 + Math.min(d.combo, 30) * 5;
+            feedback("PERFECT ✨", "#6ee7b7");
+        } else if (result === "good") {
+            d.good++;
+            d.combo++;
+            d.score += 70 + Math.min(d.combo, 30) * 3;
+            feedback("GOOD", "#7dd3fc");
+        } else {
+            d.miss++;
+            d.combo = 0;
+            feedback("MISS", "#fda4af");
+        }
+
+        d.maxCombo = Math.max(d.maxCombo, d.combo);
+        while (d.index < d.notes.length && d.notes[d.index].done) d.index++;
+        updateHUD();
+    }
+
+    function expireNotes() {
+        while (d.index < d.notes.length) {
+            const note = d.notes[d.index];
+            if (d.time <= note.target + d.hitWindow) break;
+            judge(note, "miss");
+        }
+    }
+
+    function flashPad(direction) {
+        const button = root.querySelector(`[data-dir="${direction}"]`);
+        clearTimeout(padTimers.get(direction));
+        button.classList.add("pressed");
+        padTimers.set(direction, setTimeout(() => {
+            button.classList.remove("pressed");
+        }, 120));
+    }
+
+    function input(direction) {
+        if (!window.anlacDojoActive || d.paused ||
+            !$d("djResult").hidden) return;
+
+        flashPad(direction);
+
+        // Chế độ xem: có thể thử động tác tự do.
+        if (!isRunning()) {
+            d.move = direction;
+            d.moveAt = d.visual;
+            return;
+        }
+
+        expireNotes();
+
+        const note = d.notes[d.index];
+        if (!note) return;
+
+        // Không phạt lúc đang đếm chuẩn bị.
+        if (d.time < d.notes[0].target - d.hitWindow) return;
+
+        const delta = Math.abs(d.time - note.target);
+
+        if (delta <= d.hitWindow) {
+            d.move = direction;
+            d.moveAt = d.visual;
+
+            if (direction !== note.direction) {
+                judge(note, "miss");
+            } else {
+                judge(note, delta <= d.hitWindow * .48 ? "perfect" : "good");
+            }
+        } else {
+            // Bấm loạn ngoài nhịp cũng ảnh hưởng độ chính xác.
+            d.extra++;
+            d.combo = 0;
+            feedback("SỚM NHỊP", "#fca5a5");
+            updateHUD();
+        }
+    }
+
+    function finish() {
+        if (!isRunning()) return;
+
+        d.phase = "result";
+        d.paused = false;
+        d.passed = accuracy() >= DIFFICULTY[d.difficulty].pass;
+
+        let reward = 0;
+        if (d.passed) {
+            reward = 100 + d.level * 10;
+            d.merit += Math.max(0, addMerit(reward));
+
+            progress[d.difficulty] = Math.max(
+                progress[d.difficulty],
+                Math.min(20, d.level + 1)
+            );
+            saveProgress();
+        }
+
+        $d("djResultTitle").textContent = d.passed
+            ? (d.level === 20 ? "🏆 Hoàn thành 20 màn!" : "🥋 Hoàn thành bài luyện!")
+            : "🪷 Thử lại, chậm mà chắc";
+
+        $d("djResultText").textContent =
+            `Chính xác ${accuracy()}% · Điểm ${d.score.toLocaleString("vi-VN")}` +
+            ` · Combo cao nhất ${d.maxCombo}. ` +
+            `Perfect: ${d.perfect}, Good: ${d.good}, Miss: ${d.miss}` +
+            `, bấm ngoài nhịp: ${d.extra}. ` +
+            (d.passed
+                ? `Thưởng ${reward} công đức.`
+                : "Chưa đạt yêu cầu màn này; không bị trừ công đức.");
+
+        $d("djContinue").textContent =
+            d.passed && d.level < 20 ? "Màn tiếp →" : "↻ Luyện lại";
+
+        fillLevels(d.level);
+        $d("djResult").hidden = false;
+        updateHUD();
+    }
+
+    function togglePause() {
+        if (!isRunning()) return;
+
+        d.paused = !d.paused;
+        $d("djFeedback").textContent = d.paused ? "⏸ TẠM DỪNG" : "";
+        d.feedbackUntil = d.paused ? Infinity : 0;
+        d.last = performance.now();
+        unlockAudio();
+        updateHUD();
+    }
+
+    function updateTrack() {
+        const track = $d("djTrack");
+        const width = track.clientWidth;
+        const targetX = width * .22;
+
+        // Cùng tốc độ trượt tương đối, tăng độ khó bằng nhịp nốt.
+        const lookAhead = Math.max(1.3, d.interval * 3);
+        const travel = width * .78;
+
+        for (let i = d.index; i < d.notes.length; i++) {
+            const note = d.notes[i];
+            if (note.done) continue;
+
+            const ahead = note.target - d.time;
+            if (ahead > lookAhead + .2) break;
+
+            if (!note.element) {
+                const box = document.createElement("div");
+                box.className = "dj-note";
+                box.textContent = ARROWS[note.direction];
+                box.style.background = COLORS[note.direction];
+                box.setAttribute("aria-hidden", "true");
+                track.appendChild(box);
+                note.element = box;
+            }
+
+            note.element.style.left =
+                (targetX + ahead / lookAhead * travel) + "px";
+        }
+    }
+
+    // ================= VẼ VÕ ĐƯỜNG =================
+    function line(x1, y1, x2, y2, color, width) {
+        ctx.strokeStyle = color;
+        ctx.lineWidth = width;
+        ctx.lineCap = "round";
+        ctx.beginPath();
+        ctx.moveTo(x1, y1);
+        ctx.lineTo(x2, y2);
+        ctx.stroke();
+    }
+
+    function oval(x, y, rx, ry, color) {
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        ctx.ellipse(x, y, rx, ry, 0, 0, Math.PI * 2);
+        ctx.fill();
+    }
+
+    function label(text, x, y, size, color) {
+        ctx.font = `700 ${size}px system-ui`;
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillStyle = color;
+        ctx.fillText(text, x, y);
+    }
+
+    function lerp(a, b, p) { return a + (b - a) * p; }
+
+    /*
+     * Tư thế: khuỷu trái, tay trái, khuỷu phải, tay phải,
+     * đầu gối trái, chân trái, đầu gối phải, chân phải.
+     */
+    const REST = [
+        [-24, -60], [-12, -48], [24, -60], [12, -48],
+        [-16, -20], [-24, 0], [16, -20], [24, 0]
+    ];
+
+    const POSES = [
+        [
+            [-37,-70],[-65,-72],[20,-55],[3,-64],
+            [-25,-20],[-39,0],[18,-22],[34,0]
+        ],
+        [
+            [-28,-91],[-13,-114],[28,-91],[13,-114],
+            [-20,-20],[-30,0],[20,-20],[30,0]
+        ],
+        [
+            [-34,-44],[-49,-26],[34,-44],[49,-26],
+            [-30,-8],[-45,0],[30,-8],[45,0]
+        ],
+        [
+            [-20,-55],[-4,-67],[34,-73],[60,-83],
+            [-15,-22],[-25,0],[34,-38],[65,-52]
+        ]
+    ];
+
+    function monk(x, y, scale, phase, main) {
+        const beat = isRunning()
+            ? d.time / d.interval
+            : d.visual * 1.45;
+
+        let direction = Math.floor(beat + phase) % 4;
+        let strength = Math.pow(Math.max(0, Math.sin((beat % 1) * Math.PI)), .7);
+
+        if (main && isRunning()) {
+            direction = d.move;
+            strength = clampD(1 - (d.visual - d.moveAt) / .48, 0, 1);
+        } else if (main && d.visual - d.moveAt < .6) {
+            direction = d.move;
+            strength = clampD(1 - (d.visual - d.moveAt) / .6, 0, 1);
+        }
+
+        if (reduced) strength *= .35;
+
+        const pose = POSES[direction];
+        const points = REST.map((p, i) => [
+            lerp(p[0], pose[i][0], strength),
+            lerp(p[1], pose[i][1], strength)
+        ]);
+
+        const robe = main ? "#ebac3f" : "#aa6740";
+        const skin = "#efc797";
+        const bob = direction === 2 ? strength * 10 : -strength * 3;
+
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.scale(scale, scale);
+
+        oval(0, 5, 43, 10, "#0005");
+
+        if (main) {
+            ctx.strokeStyle = "#fde68a88";
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.ellipse(0, 6, 47, 13, 0, 0, Math.PI * 2);
+            ctx.stroke();
+        }
+
+        const hipY = -39 + bob;
+
+        // Chân và giày.
+        for (const [knee, foot, side] of [[4, 5, -1], [6, 7, 1]]) {
+            line(side * 10, hipY, ...points[knee], "#694331", 12);
+            line(...points[knee], ...points[foot], "#c69b76", 9);
+            line(
+                points[foot][0] - 4, points[foot][1],
+                points[foot][0] + 7, points[foot][1],
+                "#1c2330", 8
+            );
+        }
+
+        // Áo và đai.
+        ctx.fillStyle = robe;
+        ctx.beginPath();
+        ctx.moveTo(-18, -79 + bob);
+        ctx.lineTo(18, -79 + bob);
+        ctx.lineTo(23, -34 + bob);
+        ctx.lineTo(-23, -34 + bob);
+        ctx.closePath();
+        ctx.fill();
+
+        line(-14, -75 + bob, 11, -47 + bob, "#ffd788", 4);
+        line(-21, -43 + bob, 21, -43 + bob, "#542e27", 7);
+
+        // Hai tay có khuỷu, không chỉ xoay một khối.
+        for (const [elbow, hand, side] of [[0, 1, -1], [2, 3, 1]]) {
+            line(side * 16, -72 + bob, ...points[elbow], robe, 12);
+            line(...points[elbow], ...points[hand], skin, 8);
+            oval(...points[hand], 5, 5, skin);
+        }
+
+        // Đầu và nét mặt.
+        oval(0, -94 + bob, 15, 18, skin);
+        oval(-5, -96 + bob, 1.4, 1.5, "#39291d");
+        oval(5, -96 + bob, 1.4, 1.5, "#39291d");
+        line(-4, -87 + bob, 4, -87 + bob, "#995b45", 1.3);
+
+        for (let i = -1; i <= 1; i++) {
+            oval(i * 4, -105 + bob, 1, 1, "#b57d56");
+        }
+
+        label(main ? "BẠN" : "VÕ TĂNG", 0, 24, main ? 12 : 9,
+              main ? "#fde68a" : "#d3c4af");
+
+        ctx.restore();
+    }
+
+    function draw() {
+        ctx.clearRect(0, 0, viewW, viewH);
+
+        const sky = ctx.createLinearGradient(0, 0, 0, viewH);
+        sky.addColorStop(0, "#172235");
+        sky.addColorStop(.6, "#342735");
+        sky.addColorStop(1, "#211923");
+        ctx.fillStyle = sky;
+        ctx.fillRect(0, 0, viewW, viewH);
+
+        const floorY = viewH * .53;
+
+        // Trăng và núi xa.
+        oval(viewW * .77, viewH * .2, 25, 25, "#f9dea34d");
+
+        for (let i = 0; i < 5; i++) {
+            ctx.fillStyle = i % 2 ? "#172937" : "#20313e";
+            ctx.beginPath();
+            ctx.moveTo(i * viewW / 4 - 100, floorY);
+            ctx.lineTo(i * viewW / 4 + 40, viewH * (.15 + i % 2 * .1));
+            ctx.lineTo(i * viewW / 4 + 190, floorY);
+            ctx.fill();
+        }
+
+        // Cột gỗ, xà ngang, biển võ đường.
+        for (const fraction of [.06, .94]) {
+            ctx.fillStyle = "#662f2c";
+            ctx.fillRect(viewW * fraction - 9, 12, 18, viewH * .86);
+            ctx.fillStyle = "#b18348";
+            ctx.fillRect(viewW * fraction - 14, viewH * .86, 28, 10);
+        }
+
+        ctx.fillStyle = "#5b302c";
+        ctx.fillRect(viewW * .04, 10, viewW * .92, 13);
+        ctx.fillStyle = "#1b1720";
+        ctx.fillRect(viewW / 2 - 110, 16, 220, 33);
+        label("THIẾU LÂM • TÂM TĨNH THÂN AN",
+              viewW / 2, 33, Math.min(12, viewW / 38), "#eac783");
+
+        // Sân lát gạch phối cảnh.
+        ctx.fillStyle = "#473536";
+        ctx.fillRect(0, floorY, viewW, viewH - floorY);
+
+        for (let i = 0; i <= 10; i++) {
+            line(viewW / 2, floorY, i * viewW / 10, viewH, "#bd997522", 1);
+        }
+
+        for (let i = 0; i < 6; i++) {
+            const p = i / 5;
+            const y = floorY + p * p * (viewH - floorY);
+            line(0, y, viewW, y, "#bd997533", 1);
+        }
+
+        // Đèn lồng.
+        for (const fraction of [.14, .86]) {
+            const x = viewW * fraction;
+            line(x, 23, x, 55, "#d5ae67", 2);
+            oval(x, 66, 13, 18, "#c34839");
+            oval(x, 66, 5, 16, "#e98e55");
+        }
+
+        const unit = Math.max(.2, Math.min(viewW / 750, viewH / 310));
+
+        monk(viewW * .23, viewH * .65, unit * .72, 0, false);
+        monk(viewW * .5,  viewH * .62, unit * .68, 1, false);
+        monk(viewW * .77, viewH * .65, unit * .72, 2, false);
+
+        monk(viewW * .16, viewH * .88, unit * .9, 2, false);
+        monk(viewW * .84, viewH * .88, unit * .9, 0, false);
+        monk(viewW * .5,  viewH * .89, unit * 1.12, 0, true);
+    }
+
+    function frame(now) {
+        if (!window.anlacDojoActive) return;
+
+        const dt = Math.max(0, (now - d.last) / 1000);
+        d.last = now;
+
+        if (!d.paused) {
+            d.visual += Math.min(dt, .1);
+
+            if (isRunning()) {
+                // Giữ thời gian bài luyện theo thời gian thực.
+                d.time += dt;
+
+                expireNotes();
+
+                const beat = Math.floor(d.time / d.interval);
+                if (beat !== d.lastBeat) {
+                    d.lastBeat = beat;
+                    beep(beat % 4 === 0);
+
+                    if (beat < 4) {
+                        feedback(String(4 - beat), "#fde68a");
+                    }
+                }
+
+                updateTrack();
+                updateHUD();
+
+                if (d.time >= d.duration) finish();
+            }
+
+            if (d.visual > d.feedbackUntil) {
+                $d("djFeedback").textContent = "";
+            }
+        }
+
+        draw();
+        d.raf = requestAnimationFrame(frame);
+    }
+
+    // ================= SỰ KIỆN =================
+    entrance.addEventListener("click", enter);
+    $d("djBack").addEventListener("click", exit);
+    $d("djStart").addEventListener("click", start);
+    $d("djPause").addEventListener("click", togglePause);
+
+    $d("djDifficulty").addEventListener("change", () => fillLevels(1));
+    $d("djLevelSelect").addEventListener("change", () => {
+        $d("djLevelText").textContent = $d("djLevelSelect").value;
+    });
+
+    $d("djContinue").addEventListener("click", () => {
+        const target = d.passed && d.level < 20 ? d.level + 1 : d.level;
+        fillLevels(target);
+        start();
+    });
+
+    $d("djDismiss").addEventListener("click", () => {
+        d.phase = "watch";
+        $d("djResult").hidden = true;
+        clearNotes();
+        $d("djMessage").textContent =
+            "Đang xem biểu diễn. Bạn có thể thử bốn nút hoặc chọn bài luyện khác.";
+        updateHUD();
+    });
+
+    $d("djSound").addEventListener("click", () => {
+        d.sound = !d.sound;
+        $d("djSound").textContent = d.sound ? "🔊 Nhịp" : "🔇 Nhịp";
+        $d("djSound").setAttribute("aria-pressed", String(d.sound));
+        unlockAudio();
+    });
+
+    root.querySelectorAll(".dj-pad").forEach(button => {
+        button.addEventListener("pointerdown", event => {
+            if (event.button !== 0) return;
+            event.preventDefault();
+            unlockAudio();
+            input(Number(button.dataset.dir));
+        });
+
+        // Hỗ trợ kích hoạt nút bằng công nghệ trợ năng/bàn phím.
+        button.addEventListener("click", event => {
+            if (event.detail === 0) input(Number(button.dataset.dir));
+        });
+    });
+
+    const KEY_MAP = {
+        ArrowLeft: 0, KeyA: 0,
+        ArrowUp: 1, KeyW: 1,
+        ArrowDown: 2, KeyS: 2,
+        ArrowRight: 3, KeyD: 3
+    };
+
+    document.addEventListener("keydown", event => {
+        if (!window.anlacDojoActive) return;
+
+        const editing = event.target instanceof HTMLElement &&
+            event.target.matches("select, input, textarea");
+
+        if (editing) return;
+
+        if (event.code in KEY_MAP) {
+            event.preventDefault();
+            event.stopImmediatePropagation();
+            if (!event.repeat) {
+                unlockAudio();
+                input(KEY_MAP[event.code]);
+            }
+        } else if (event.code === "KeyP") {
+            event.preventDefault();
+            event.stopImmediatePropagation();
+            if (!event.repeat) togglePause();
+        } else if (event.code === "Escape") {
+            event.preventDefault();
+            event.stopImmediatePropagation();
+            if (!event.repeat) exit();
+        }
+    }, true);
+
+    function autoPause() {
+        if (window.anlacDojoActive && isRunning() && !d.paused) {
+            togglePause();
+        }
+    }
+
+    window.addEventListener("blur", autoPause);
+    document.addEventListener("visibilitychange", () => {
+        if (document.hidden) autoPause();
+    });
+
+    window.addEventListener("resize", fit);
+
+    if ("ResizeObserver" in window) {
+        new ResizeObserver(fit).observe($d("djStage"));
+    }
+
+    fillLevels(1);
 })();
 </script>
 </body>
