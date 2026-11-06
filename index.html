@@ -3665,5 +3665,434 @@ body.bubble-mode .modal {
     }
 })();
 </script>
+<style>
+/* Bỏ nút Ẩn/Hiện điều khiển ở góc trên bên phải. */
+#cinemaToolsSimple {
+    display: none !important;
+}
+
+/* Thanh trên cùng chỉ còn nút Về Chánh Điện. */
+body.cinema-clean #cinemaMinimalBar {
+    justify-content: flex-start;
+}
+
+/* Luôn hiện bảng thao tác khi ở Rạp Phim. */
+body.cinema-clean #controls {
+    display: grid !important;
+}
+
+/* Khi vào trò bắn bóng vẫn phải ẩn thao tác của Rạp Phim. */
+body.bubble-mode #controls {
+    display: none !important;
+}
+</style>
+<!-- Lớp làm tối không gian xung quanh màn hình phim -->
+<div id="cinemaDimOverlay" aria-hidden="true"></div>
+
+<style>
+/*
+ * Thứ tự hiển thị:
+ * Canvas khán phòng: 0
+ * Lớp làm tối:       2
+ * Video:            3
+ * Thanh điều khiển:  5
+ */
+#cinemaDimOverlay {
+    position: fixed;
+    inset: 0;
+    z-index: 2;
+
+    background: rgba(0, 0, 0, 0.88);
+    opacity: 0;
+    visibility: hidden;
+
+    /* Không chặn chuột hoặc thao tác chạm. */
+    pointer-events: none;
+
+    transition:
+        opacity 350ms ease,
+        visibility 350ms ease;
+}
+
+/* Chỉ làm tối trong Rạp Phim khi bật Góc Nhìn. */
+body.cinema-clean.fpv-mode:not(.bubble-mode) #cinemaDimOverlay {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* Video nằm trên lớp tối và giữ nguyên độ sáng. */
+body.cinema-clean #cinemaScreen,
+body.cinema-clean.fpv-mode #cinemaScreen {
+    z-index: 3;
+}
+
+/* Giảm ánh viền khi xem ở góc nhìn cá nhân. */
+body.cinema-clean.fpv-mode #cinemaScreen {
+    border-color: #88703c;
+    box-shadow:
+        0 0 24px rgba(0, 0, 0, 0.85),
+        0 0 8px rgba(251, 191, 36, 0.12);
+}
+
+/* Điều hướng và bảng thao tác luôn nằm trên lớp tối. */
+body.cinema-clean #hud,
+body.cinema-clean #controls {
+    z-index: 5;
+}
+
+/* Không để lớp tối ảnh hưởng trò bắn bóng. */
+body.bubble-mode #cinemaDimOverlay {
+    display: none !important;
+}
+
+/* Tôn trọng cài đặt giảm chuyển động của thiết bị. */
+@media (prefers-reduced-motion: reduce) {
+    #cinemaDimOverlay {
+        transition: none;
+    }
+}
+</style>
+<!-- ========== BỐ CỤC RẠP PHIM GỌN, KHÔNG CHE VIDEO ========== -->
+<style>
+/* Thanh điều hướng này chỉ hiện trong Rạp Phim. */
+#cinemaMinimalBar {
+    display: none;
+}
+
+/* Ẩn hai bảng thông tin cũ khi đang ở rạp. */
+body.cinema-clean #hud > section {
+    display: none !important;
+}
+
+body.cinema-clean #hud {
+    top: max(8px, env(safe-area-inset-top));
+    left: max(8px, env(safe-area-inset-left));
+    right: max(8px, env(safe-area-inset-right));
+    align-items: center;
+    justify-content: center;
+}
+
+body.cinema-clean #cinemaMinimalBar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    pointer-events: none;
+}
+
+#cinemaMinimalBar button {
+    pointer-events: auto;
+    min-height: 40px;
+    padding: 8px 13px;
+    border-radius: 12px;
+    border: 1px solid #d8a737;
+    background: rgba(15, 12, 22, .94);
+    color: #fff2c5;
+    font-size: 13px;
+    box-shadow: 0 3px 12px #0005;
+}
+
+/* Mặc định không hiện thanh thao tác trong rạp. */
+body.cinema-clean #controls {
+    display: none !important;
+}
+
+/* Chỉ mở khi người chơi bấm Điều khiển. */
+body.cinema-clean.cinema-tools-open #controls {
+    display: grid !important;
+    bottom: max(8px, env(safe-area-inset-bottom));
+    gap: 5px;
+    width: min(960px, calc(100% - 16px));
+
+    /* Điện thoại ngang: không để bảng chiếm toàn màn hình. */
+    max-height: 40vh;
+    max-height: 40dvh;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+}
+
+/* Không hiện chat và nút thuộc khu vực khác. */
+body.cinema-clean #chatForm,
+body.cinema-clean #indoorActions,
+body.cinema-clean #outdoorActions,
+body.cinema-clean #gateActions,
+body.cinema-clean #actionBar > button {
+    display: none !important;
+}
+
+body.cinema-clean #actionBar {
+    justify-content: center;
+    padding: 5px;
+}
+
+body.cinema-clean #cinemaActions {
+    display: flex !important;
+    justify-content: center;
+    gap: 7px;
+}
+
+body.cinema-clean #cinemaActions .action {
+    min-width: 80px;
+    padding: 6px 10px;
+}
+
+body.cinema-clean #cinemaActions .action span {
+    display: inline;
+    margin-right: 5px;
+    font-size: 17px;
+}
+
+body.cinema-clean #cinemaControls {
+    padding: 7px;
+    gap: 6px;
+}
+
+body.cinema-clean #ytInput {
+    min-width: 120px;
+}
+
+/*
+ * Không phóng video bằng scale(1.38) nữa.
+ * JavaScript bên dưới tính kích thước theo vùng còn trống.
+ */
+body.cinema-clean #cinemaScreen,
+body.cinema-clean.fpv-mode #cinemaScreen {
+    position: fixed;
+    transform: none !important;
+    transition: none !important;
+    margin: 0;
+    aspect-ratio: auto;
+    box-sizing: border-box;
+    z-index: 3;
+    border: 2px solid #d8a737;
+    border-radius: 12px;
+    background: #000;
+    overflow: hidden;
+    box-shadow: 0 0 22px #fbbf242b;
+}
+
+body.cinema-clean #cinemaScreen iframe,
+body.cinema-clean #cinemaScreen video {
+    display: block;
+    width: 100%;
+    height: 100%;
+    border: 0;
+    object-fit: contain !important;
+}
+
+/* Thông báo ngắn ở trên, không đặt giữa màn hình video. */
+body.cinema-clean #notice {
+    top: max(9px, env(safe-area-inset-top));
+    max-width: calc(100vw - 360px);
+    padding: 8px 10px;
+    font-size: 11px;
+    z-index: 6;
+}
+
+/* Màn hình nhỏ: tránh thông báo đè lên nút điều hướng. */
+@media (max-width: 650px) {
+    body.cinema-clean #notice {
+        display: none !important;
+    }
+
+    #cinemaMinimalBar button {
+        font-size: 12px;
+        padding: 7px 10px;
+    }
+
+    body.cinema-clean #cinemaControls button {
+        padding: 7px 9px;
+        font-size: 12px;
+    }
+}
+
+/* Giữ nguyên sự cách ly giao diện của trò bắn bóng. */
+body.bubble-mode #hud,
+body.bubble-mode #controls,
+body.bubble-mode #cinemaScreen {
+    display: none !important;
+}
+</style>
+
+<script>
+(() => {
+    "use strict";
+
+    // Tránh khởi tạo hai lần nếu vô tình dán trùng.
+    if (window.anlacCinemaCleanInstalled) return;
+    window.anlacCinemaCleanInstalled = true;
+
+    const get = id => document.getElementById(id);
+    const hud = get("hud");
+    const controls = get("controls");
+    const screen = get("cinemaScreen");
+
+    if (!hud || !controls || !screen) return;
+
+    let toolsOpen = false;
+    let layoutFrame = 0;
+
+    const bar = document.createElement("div");
+    bar.id = "cinemaMinimalBar";
+    bar.innerHTML = `
+        <button id="cinemaBackSimple" type="button">
+            ← Về Chánh Điện
+        </button>
+        <button id="cinemaToolsSimple"
+                type="button"
+                aria-expanded="false"
+                aria-controls="controls">
+            ⚙ Điều khiển
+        </button>
+    `;
+    hud.appendChild(bar);
+
+    const toolsButton = get("cinemaToolsSimple");
+
+    function isCinemaVisible() {
+        return state.zone === "CINEMA" &&
+               !window.anlacBubbleActive;
+    }
+
+    function updateCinemaClasses() {
+        const active = state.zone === "CINEMA";
+
+        toolsOpen = true;
+
+        document.body.classList.toggle("cinema-clean", active);
+        document.body.classList.toggle("cinema-tools-open", active);
+
+        toolsButton.hidden = true;
+        toolsButton.setAttribute("aria-expanded", "true");
+
+        if (!active) {
+            // Trả lại CSS ban đầu khi rời rạp.
+            screen.style.removeProperty("left");
+            screen.style.removeProperty("top");
+            screen.style.removeProperty("width");
+            screen.style.removeProperty("height");
+        }
+    }
+
+    function positionCinemaScreen() {
+        if (!isCinemaVisible() || !state.screenVisible) return;
+
+        const viewportWidth = window.innerWidth;
+        const viewportHeight = window.innerHeight;
+
+        const headerBottom = hud.getBoundingClientRect().bottom;
+        const footerTop = toolsOpen
+            ? controls.getBoundingClientRect().top
+            : viewportHeight - 12;
+
+        const top = headerBottom + 12;
+        const bottom = Math.min(footerTop - 12, viewportHeight - 20);
+
+        const availableWidth = Math.max(1, viewportWidth - 24);
+        const availableHeight = Math.max(1, bottom - top);
+
+        /*
+         * Tổng quan: chừa phần dưới để nhìn khán giả.
+         * Góc nhìn cá nhân: tận dụng vùng trống để xem video lớn.
+         */
+        const videoAreaHeight = state.firstPerson
+            ? availableHeight
+            : availableHeight * 0.58;
+
+        const maxWidth = state.firstPerson ? 1280 : 800;
+
+        // Giữ khung phát 16:9, có tính cả đường viền.
+        const border = 4;
+        const innerWidth = Math.max(1, Math.min(
+            availableWidth - border,
+            maxWidth - border,
+            Math.max(1, videoAreaHeight - border) * 16 / 9
+        ));
+
+        const width = innerWidth + border;
+        const height = innerWidth * 9 / 16 + border;
+
+        const left = (viewportWidth - width) / 2;
+        const y = state.firstPerson
+            ? top + Math.max(0, (availableHeight - height) / 2)
+            : top;
+
+        screen.style.left = Math.round(left) + "px";
+        screen.style.top = Math.round(y) + "px";
+        screen.style.width = Math.round(width) + "px";
+        screen.style.height = Math.round(height) + "px";
+    }
+
+    function requestLayout() {
+        cancelAnimationFrame(layoutFrame);
+
+        layoutFrame = requestAnimationFrame(() => {
+            if (window.anlacBubbleActive) return;
+
+            /*
+             * Hàm resize cũ đo lại HUD/thanh nút và cập nhật
+             * vùng canvas. Sau đó định vị video theo vùng trống.
+             */
+            resize();
+        });
+    }
+
+    /*
+     * Bổ sung vào các hàm hiện có.
+     * Không cần sửa hoặc đăng ký lại nút chuyển khu vực cũ.
+     */
+    const originalSyncUI = syncUI;
+    syncUI = function () {
+        originalSyncUI();
+        updateCinemaClasses();
+        requestLayout();
+    };
+
+    const originalResize = resize;
+    resize = function () {
+        originalResize();
+        positionCinemaScreen();
+    };
+
+    get("cinemaBackSimple").addEventListener("click", () => {
+        if (!isCinemaVisible()) return;
+
+        // Dừng cả video HTML5 và iframe YouTube trước khi rời rạp.
+        const video = screen.querySelector("video");
+        if (video) video.pause();
+
+        screen.replaceChildren();
+
+        if (typeof ytPopupWindow !== "undefined" &&
+            ytPopupWindow && !ytPopupWindow.closed) {
+            ytPopupWindow.close();
+        }
+
+        toolsOpen = false;
+        switchZone("INDOOR");
+        requestLayout();
+    });
+
+    // Nút Góc Nhìn cũ không gọi syncUI nên đo lại riêng.
+    get("camViewBtn")?.addEventListener("click", requestLayout);
+
+    /*
+     * Trên điện thoại, hàng nút có thể xuống dòng.
+     * Theo dõi kích thước để video không bị bảng điều khiển che.
+     */
+    if ("ResizeObserver" in window) {
+        const observer = new ResizeObserver(() => {
+            if (isCinemaVisible()) requestLayout();
+        });
+
+        observer.observe(hud);
+        observer.observe(controls);
+    }
+
+    updateCinemaClasses();
+    requestLayout();
+})();
+</script>
 </body>
 </html>
