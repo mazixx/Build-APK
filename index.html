@@ -448,6 +448,8 @@ const pick = array => array[Math.floor(Math.random() * array.length)];
 const TAU = Math.PI * 2;
 
 function reportError(message) {
+    // Bỏ qua các lỗi do ứng dụng bên thứ 3 (Zalo, Messenger, Extension) tự chèn vào
+    if (/zalo|fb_xd|webkit|Script error/i.test(message)) return;
     const box = $("errorBox");
     box.hidden = false;
     box.textContent =
