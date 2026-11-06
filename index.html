@@ -923,6 +923,7 @@ function floatText(text,x,y,color="#fde68a") {
 }
 
 function resize() {
+    if (window.anlacBubbleActive) return;
     W=window.innerWidth;
     H=window.innerHeight;
     DPR=Math.min(window.devicePixelRatio||1,2);
@@ -2554,6 +2555,10 @@ let lastTime = performance.now();
 function loop(now) {
     const dt = clamp((now - lastTime) / 1000, 0, .08);
     lastTime = now;
+    if (window.anlacBubbleActive) {
+        requestAnimationFrame(loop);
+        return;
+    }
     t += dt;
 
     if (state.zone === "INDOOR" && state.chanting && state.meditating && t >= nextChant) {
@@ -2577,6 +2582,1088 @@ function boot() {
     requestAnimationFrame(loop);
 }
 boot();
+</script>
+<!-- ================= GAME SƯ THẦY BẮN BÓNG ================= -->
+<style>
+/* Cách ly giao diện: không hiện các nút của khu vực khác. */
+body.bubble-mode #hud,
+body.bubble-mode #controls,
+body.bubble-mode #templeCanvas,
+body.bubble-mode #cinemaScreen,
+body.bubble-mode #notice,
+body.bubble-mode .modal {
+    display: none !important;
+}
+
+#bubbleGame {
+    position: fixed;
+    inset: 0;
+    z-index: 60;
+    height: 100%;
+    height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding:
+        max(8px, env(safe-area-inset-top))
+        max(8px, env(safe-area-inset-right))
+        max(8px, env(safe-area-inset-bottom))
+        max(8px, env(safe-area-inset-left));
+    background:
+        radial-gradient(ellipse at top, #243b54, transparent 65%),
+        #08121e;
+    color: #fff4cd;
+    overflow: hidden;
+}
+
+#bubbleGame[hidden] {
+    display: none !important;
+}
+
+.bb-header,
+.bb-footer {
+    width: min(760px, 100%);
+    margin: 0 auto;
+    flex: 0 0 auto;
+}
+
+.bb-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.bb-heading strong {
+    color: #fde68a;
+    font-size: 18px;
+}
+
+#bubbleGame button {
+    min-height: 44px;
+    border-radius: 11px;
+    font-size: 13px;
+    background: #233348;
+    border: 1px solid #64748b;
+    color: #fff4cd;
+}
+
+#bubbleGame button.bb-primary {
+    background: #116149;
+    border-color: #6ee7b7;
+}
+
+.bb-stats {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 6px 14px;
+    padding: 7px;
+    margin-top: 6px;
+    border-radius: 12px;
+    background: #0005;
+    font-size: 12px;
+    font-variant-numeric: tabular-nums;
+}
+
+.bb-stats b {
+    color: #6ee7b7;
+}
+
+#bbStage {
+    flex: 1 1 auto;
+    min-height: 0;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+#bbCanvas {
+    /* Ghi đè CSS canvas toàn cục của trò chơi cũ. */
+    position: static;
+    inset: auto;
+    z-index: auto;
+    display: block;
+    flex: 0 0 auto;
+    touch-action: none;
+    border-radius: 16px;
+    background: #101f30;
+    box-shadow: 0 0 30px #0008;
+}
+
+#bbMessage {
+    min-height: 36px;
+    text-align: center;
+    font-size: 13px;
+    line-height: 1.4;
+    color: #fde68a;
+}
+
+.bb-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 6px;
+}
+
+.bb-help {
+    margin: 6px 0 0;
+    text-align: center;
+    font-size: 11px;
+    line-height: 1.4;
+    color: #bccbdd;
+}
+
+@media (max-width: 480px) {
+    .bb-heading strong { font-size: 15px; }
+    #bubbleGame { gap: 5px; }
+    #bubbleGame button { padding: 7px 10px; }
+    .bb-stats { font-size: 11px; gap: 5px 10px; }
+    .bb-help { font-size: 10px; }
+}
+
+@media (max-height: 540px) {
+    .bb-help { display: none; }
+    .bb-stats { padding: 3px; margin-top: 3px; }
+    #bbMessage { min-height: 20px; font-size: 11px; }
+    #bubbleGame { gap: 3px; }
+}
+</style>
+
+<section id="bubbleGame" hidden aria-label="Sư Thầy Bắn Bóng">
+    <header class="bb-header">
+        <div class="bb-heading">
+            <strong>🧘 Sư Thầy Bắn Bóng</strong>
+            <button id="bbExit" type="button">← Về chùa</button>
+        </div>
+
+        <div class="bb-stats">
+            <span>Màn <b id="bbLevel">1</b></span>
+            <span>Điểm <b id="bbScore">0</b></span>
+            <span>Kỷ lục <b id="bbBest">0</b></span>
+            <span>Công đức nhận <b id="bbMerit">0</b></span>
+            <span>Lượt trượt <b id="bbMiss">0/5</b></span>
+        </div>
+    </header>
+
+    <div id="bbStage">
+        <canvas id="bbCanvas"
+                width="960"
+                height="1440"
+                aria-label="Bàn bắn bóng. Chạm để ngắm và bắn, hoặc dùng phím mũi tên và Space.">
+        </canvas>
+    </div>
+
+    <footer class="bb-footer">
+        <div id="bbMessage" role="status" aria-live="polite"></div>
+
+        <div class="bb-buttons">
+            <button id="bbShoot" type="button" class="bb-primary">🎯 Bắn</button>
+            <button id="bbSwap" type="button">🔄 Đổi bóng</button>
+            <button id="bbPause" type="button">⏸ Tạm dừng</button>
+            <button id="bbRestart" type="button">↻ Chơi lại</button>
+            <button id="bbNext" type="button" class="bb-primary" hidden>
+                Màn tiếp →
+            </button>
+        </div>
+
+        <p class="bb-help">
+            Chạm/kéo để ngắm, thả để bắn · Máy tính: ← → ngắm,
+            Space bắn, X đổi bóng, P tạm dừng · Ghép từ 3 bóng cùng màu.
+        </p>
+    </footer>
+</section>
+
+<script>
+(() => {
+    "use strict";
+
+    const el = id => document.getElementById(id);
+    const root = el("bubbleGame");
+    const boardCanvas = el("bbCanvas");
+    const g = boardCanvas.getContext("2d");
+
+    if (!g) {
+        console.error("Không thể khởi tạo Canvas cho trò bắn bóng.");
+        return;
+    }
+
+    window.anlacBubbleActive = false;
+
+    // Nút truy cập xuất hiện trong nhóm chuyển khu vực.
+    const entrance = document.createElement("button");
+    entrance.type = "button";
+    entrance.id = "bubbleZoneBtn";
+    entrance.className = "green";
+    entrance.textContent = "🎮 Chơi game";
+    document.querySelector(".zone-buttons").appendChild(entrance);
+
+    const BW = 480;
+    const BH = 720;
+    const R = 18;
+    const STEP = Math.sqrt(3) * R;
+    const COLS = 12;
+    const ROWS = 16;
+    const TOP = 70;
+    const LEFT = 30;
+    const RIGHT = 450;
+    const DANGER = 560;
+    const CANNON = { x: 240, y: 630 };
+    const SPEED = 790;
+    const MIN_ANGLE = -Math.PI + 0.20;
+    const MAX_ANGLE = -0.20;
+
+    const COLORS_BB = [
+        "#fb7185", "#60a5fa", "#4ade80",
+        "#facc15", "#c084fc", "#fb923c"
+    ];
+    // Ký hiệu giúp phân biệt bóng, không chỉ dựa vào màu sắc.
+    const SYMBOLS = ["●", "◆", "▲", "★", "✿", "■"];
+
+    const reduceMotion =
+        window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    const game = {
+        grid: [],
+        level: 1,
+        score: 0,
+        best: 0,
+        merit: 0,
+        misses: 0,
+        drop: 0,
+        angle: -Math.PI / 2,
+        current: 0,
+        next: 1,
+        shot: null,
+        particles: [],
+        phase: "ready",
+        paused: false,
+        raf: 0,
+        last: 0,
+        pointer: null,
+        keys: new Set()
+    };
+
+    const limit = (v, a, b) => Math.max(a, Math.min(b, v));
+
+    try {
+        const saved = Number(localStorage.getItem("anlac_bubble_best"));
+        if (Number.isFinite(saved) && saved >= 0) game.best = saved;
+    } catch (_) {}
+
+    function message(text) {
+        el("bbMessage").textContent = text;
+    }
+
+    function updateUI() {
+        el("bbLevel").textContent = game.level;
+        el("bbScore").textContent = game.score.toLocaleString("vi-VN");
+        el("bbBest").textContent = game.best.toLocaleString("vi-VN");
+        el("bbMerit").textContent = "+" + game.merit.toLocaleString("vi-VN");
+        el("bbMiss").textContent = game.misses + "/5";
+
+        const locked =
+            game.phase !== "playing" || game.paused || !!game.shot;
+
+        el("bbShoot").disabled = locked;
+        el("bbSwap").disabled = locked;
+        el("bbPause").disabled = game.phase !== "playing";
+        el("bbPause").textContent =
+            game.paused ? "▶ Tiếp tục" : "⏸ Tạm dừng";
+        el("bbNext").hidden = game.phase !== "won";
+    }
+
+    function award(points, merit) {
+        game.score += points;
+
+        // Dùng trực tiếp hệ thống công đức hiện có trong file.
+        if (merit > 0) {
+            const actual = addMerit(merit);
+            game.merit += Math.max(0, actual);
+        }
+
+        if (game.score > game.best) {
+            game.best = game.score;
+            try {
+                localStorage.setItem("anlac_bubble_best", String(game.best));
+            } catch (_) {}
+        }
+    }
+
+    function cellPosition(row, col) {
+        return {
+            x: LEFT + col * R * 2 + (row % 2 ? R : 0),
+            y: TOP + row * STEP + game.drop
+        };
+    }
+
+    function valid(row, col) {
+        return row >= 0 && row < ROWS && col >= 0 && col < COLS;
+    }
+
+    function neighbors(row, col) {
+        const side = row % 2 ? 1 : -1;
+        return [
+            [row, col - 1],
+            [row, col + 1],
+            [row - 1, col],
+            [row - 1, col + side],
+            [row + 1, col],
+            [row + 1, col + side]
+        ].filter(([r, c]) => valid(r, c));
+    }
+
+    function remainingColors() {
+        const result = new Set();
+        for (const row of game.grid) {
+            for (const color of row) {
+                if (color !== null) result.add(color);
+            }
+        }
+        return [...result];
+    }
+
+    function randomColor() {
+        const options = remainingColors();
+        return options.length
+            ? options[Math.floor(Math.random() * options.length)]
+            : 0;
+    }
+
+    function normalizeAmmo() {
+        const available = remainingColors();
+        if (!available.includes(game.current)) game.current = randomColor();
+        if (!available.includes(game.next)) game.next = randomColor();
+    }
+
+    function startLevel(reset = false) {
+        if (reset) {
+            game.level = 1;
+            game.score = 0;
+            game.merit = 0;
+            // Không thu hồi công đức đã nhận từ những lần chơi trước.
+        }
+
+        game.grid = Array.from(
+            { length: ROWS },
+            () => Array(COLS).fill(null)
+        );
+
+        const filledRows = Math.min(5 + Math.floor((game.level - 1) / 2), 9);
+        const colorCount = Math.min(4 + Math.floor((game.level - 1) / 3), 6);
+
+        for (let row = 0; row < filledRows; row++) {
+            for (let col = 0; col < COLS; col++) {
+                game.grid[row][col] =
+                    Math.floor(Math.random() * colorCount);
+            }
+        }
+
+        game.drop = 0;
+        game.misses = 0;
+        game.angle = -Math.PI / 2;
+        game.current = randomColor();
+        game.next = randomColor();
+        game.shot = null;
+        game.particles = [];
+        game.phase = "playing";
+        game.paused = false;
+        game.keys.clear();
+        game.pointer = null;
+
+        message("Ghép từ 3 bóng cùng màu. Cẩn thận vạch đỏ phía dưới!");
+        updateUI();
+    }
+
+    function fitCanvas() {
+        if (!window.anlacBubbleActive) return;
+
+        const rect = el("bbStage").getBoundingClientRect();
+        const scale = Math.max(0.01, Math.min(rect.width / BW, rect.height / BH));
+
+        boardCanvas.style.width = (BW * scale) + "px";
+        boardCanvas.style.height = (BH * scale) + "px";
+
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        boardCanvas.width = Math.round(BW * dpr);
+        boardCanvas.height = Math.round(BH * dpr);
+        g.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+
+    function enterGame() {
+        if (window.anlacBubbleActive) return;
+
+        // Dừng phim ở phía sau màn hình chơi.
+        const cinema = el("cinemaScreen");
+        const video = cinema.querySelector("video");
+        if (video) video.pause();
+
+        // Gỡ iframe để chắc chắn không còn phát âm thanh YouTube.
+        // Khi trở về rạp sẽ tải lại video hiện tại từ đầu.
+        if (cinema.querySelector("iframe")) cinema.replaceChildren();
+
+        if (typeof ytPopupWindow !== "undefined" &&
+            ytPopupWindow && !ytPopupWindow.closed) {
+            ytPopupWindow.close();
+        }
+
+        window.anlacBubbleActive = true;
+        document.body.classList.add("bubble-mode");
+        root.hidden = false;
+
+        if (game.phase === "ready") startLevel(true);
+
+        fitCanvas();
+        updateUI();
+        el("bbShoot").focus();
+
+        game.last = performance.now();
+        cancelAnimationFrame(game.raf);
+        game.raf = requestAnimationFrame(frame);
+    }
+
+    function exitGame() {
+        if (!window.anlacBubbleActive) return;
+
+        window.anlacBubbleActive = false;
+        cancelAnimationFrame(game.raf);
+        game.keys.clear();
+        game.pointer = null;
+
+        root.hidden = true;
+        document.body.classList.remove("bubble-mode");
+
+        syncUI();
+        resize();
+
+        // Chỉ khôi phục màn hình phim nếu trước đó đang ở rạp.
+        if (state.zone === "CINEMA" && state.screenVisible) {
+            const screen = el("cinemaScreen");
+            if (!screen.querySelector("video, iframe") && videoQueue.length) {
+                renderCinemaVideo(videoQueue[0]);
+            } else {
+                const video = screen.querySelector("video");
+                if (video) video.play().catch(() => {});
+            }
+        }
+
+        entrance.focus();
+    }
+
+    function canShoot() {
+        return window.anlacBubbleActive &&
+            game.phase === "playing" &&
+            !game.paused &&
+            !game.shot;
+    }
+
+    function shoot() {
+        if (!canShoot()) return;
+
+        game.shot = {
+            x: CANNON.x,
+            y: CANNON.y,
+            vx: Math.cos(game.angle) * SPEED,
+            vy: Math.sin(game.angle) * SPEED,
+            color: game.current
+        };
+
+        game.current = game.next;
+        game.next = randomColor();
+        sound("bead");
+        updateUI();
+    }
+
+    function swap() {
+        if (!canShoot()) return;
+        [game.current, game.next] = [game.next, game.current];
+        sound("bead");
+        message("Đã đổi bóng hiện tại với bóng tiếp theo.");
+    }
+
+    function pause() {
+        if (!window.anlacBubbleActive || game.phase !== "playing") return;
+        game.paused = !game.paused;
+        game.keys.clear();
+        game.pointer = null;
+        message(game.paused ? "Đã tạm dừng." : "Tiếp tục ngắm và bắn!");
+        updateUI();
+    }
+
+    function findHit(x, y) {
+        let result = null;
+        let best = Infinity;
+
+        for (let row = 0; row < ROWS; row++) {
+            for (let col = 0; col < COLS; col++) {
+                if (game.grid[row][col] === null) continue;
+                const p = cellPosition(row, col);
+                const d = Math.hypot(x - p.x, y - p.y);
+
+                if (d <= R * 2 - 0.5 && d < best) {
+                    best = d;
+                    result = [row, col];
+                }
+            }
+        }
+        return result;
+    }
+
+    function groupFrom(row, col) {
+        const color = game.grid[row][col];
+        const visited = new Set([row + ":" + col]);
+        const queue = [[row, col]];
+
+        for (let i = 0; i < queue.length; i++) {
+            for (const [nr, nc] of neighbors(...queue[i])) {
+                const key = nr + ":" + nc;
+                if (!visited.has(key) && game.grid[nr][nc] === color) {
+                    visited.add(key);
+                    queue.push([nr, nc]);
+                }
+            }
+        }
+        return queue;
+    }
+
+    function detachedBubbles() {
+        const attached = new Set();
+        const queue = [];
+
+        // Mọi bóng ở hàng 0 đều gắn với trần.
+        for (let col = 0; col < COLS; col++) {
+            if (game.grid[0][col] !== null) {
+                attached.add("0:" + col);
+                queue.push([0, col]);
+            }
+        }
+
+        for (let i = 0; i < queue.length; i++) {
+            for (const [row, col] of neighbors(...queue[i])) {
+                const key = row + ":" + col;
+                if (game.grid[row][col] !== null && !attached.has(key)) {
+                    attached.add(key);
+                    queue.push([row, col]);
+                }
+            }
+        }
+
+        const falling = [];
+        for (let row = 0; row < ROWS; row++) {
+            for (let col = 0; col < COLS; col++) {
+                if (game.grid[row][col] !== null &&
+                    !attached.has(row + ":" + col)) {
+                    falling.push([row, col]);
+                }
+            }
+        }
+        return falling;
+    }
+
+    function removeBubbles(cells, falling) {
+        for (const [row, col] of cells) {
+            const p = cellPosition(row, col);
+            const color = game.grid[row][col];
+            game.grid[row][col] = null;
+
+            if (reduceMotion) continue;
+
+            const count = falling ? 1 : 5;
+            for (let i = 0; i < count; i++) {
+                game.particles.push({
+                    x: p.x,
+                    y: p.y,
+                    vx: (Math.random() - 0.5) * 220,
+                    vy: falling ? 40 : -80 - Math.random() * 140,
+                    color,
+                    radius: falling ? R : 4 + Math.random() * 4,
+                    life: falling ? 1.1 : 0.55,
+                    maxLife: falling ? 1.1 : 0.55
+                });
+            }
+        }
+
+        if (game.particles.length > 350) {
+            game.particles.splice(0, game.particles.length - 350);
+        }
+    }
+
+    function lose() {
+        game.phase = "lost";
+        game.shot = null;
+        game.keys.clear();
+        sound("mo");
+        message("Bóng đã tới vạch đỏ. Bấm Chơi lại để thử lần nữa — không bị trừ công đức.");
+        updateUI();
+    }
+
+    function checkEnd() {
+        if (!remainingColors().length) {
+            game.phase = "won";
+            award(500 + game.level * 100, 100);
+            sound("bell");
+            message("🎉 Hoàn thành màn! Thưởng thêm 100 công đức. Bấm Màn tiếp.");
+            return;
+        }
+
+        for (let row = 0; row < ROWS; row++) {
+            for (let col = 0; col < COLS; col++) {
+                if (game.grid[row][col] !== null &&
+                    cellPosition(row, col).y + R >= DANGER) {
+                    lose();
+                    return;
+                }
+            }
+        }
+    }
+
+    function settle(hit, atCeiling) {
+        const shot = game.shot;
+        if (!shot) return;
+
+        const candidates = new Map();
+
+        function addCandidate(row, col) {
+            if (valid(row, col) && game.grid[row][col] === null) {
+                candidates.set(row + ":" + col, [row, col]);
+            }
+        }
+
+        if (hit) {
+            for (const [row, col] of neighbors(...hit)) {
+                addCandidate(row, col);
+            }
+        }
+
+        if (atCeiling) {
+            for (let col = 0; col < COLS; col++) addCandidate(0, col);
+        }
+
+        let chosen = null;
+        let best = Infinity;
+        for (const [row, col] of candidates.values()) {
+            const p = cellPosition(row, col);
+            const distance = Math.hypot(p.x - shot.x, p.y - shot.y);
+            if (distance < best) {
+                best = distance;
+                chosen = [row, col];
+            }
+        }
+
+        if (!chosen) {
+            lose();
+            return;
+        }
+
+        const [row, col] = chosen;
+        game.grid[row][col] = shot.color;
+        game.shot = null;
+
+        const group = groupFrom(row, col);
+
+        if (group.length >= 3) {
+            removeBubbles(group, false);
+
+            const falling = detachedBubbles();
+            removeBubbles(falling, true);
+
+            const reward = group.length * 2 + falling.length * 3;
+            award(group.length * 10 + falling.length * 20, reward);
+            game.misses = 0;
+
+            message(
+                `✨ Phá ${group.length} bóng` +
+                (falling.length ? `, làm rơi ${falling.length} bóng` : "") +
+                ` — thưởng ${reward} công đức!`
+            );
+            sound("bell");
+        } else {
+            game.misses++;
+
+            if (game.misses >= 5) {
+                game.misses = 0;
+                game.drop += STEP;
+                message("⚠️ 5 lượt không phá bóng: cụm bóng đã hạ xuống!");
+                sound("mo");
+            } else {
+                message(`Chưa đủ 3 bóng cùng màu. Lượt trượt: ${game.misses}/5.`);
+            }
+        }
+
+        normalizeAmmo();
+        checkEnd();
+        updateUI();
+    }
+
+    function update(dt) {
+        if (game.paused) return;
+
+        if (game.phase === "playing") {
+            if (game.keys.has("ArrowLeft")) game.angle -= dt * 1.5;
+            if (game.keys.has("ArrowRight")) game.angle += dt * 1.5;
+            game.angle = limit(game.angle, MIN_ANGLE, MAX_ANGLE);
+
+            // Chia nhỏ bước di chuyển để tránh xuyên qua bóng.
+            if (game.shot) {
+                const steps = Math.max(1, Math.ceil(SPEED * dt / 5));
+                const stepTime = dt / steps;
+
+                for (let i = 0; i < steps && game.shot; i++) {
+                    const shot = game.shot;
+                    shot.x += shot.vx * stepTime;
+                    shot.y += shot.vy * stepTime;
+
+                    if (shot.x < LEFT) {
+                        shot.x = LEFT + (LEFT - shot.x);
+                        shot.vx = Math.abs(shot.vx);
+                    } else if (shot.x > RIGHT) {
+                        shot.x = RIGHT - (shot.x - RIGHT);
+                        shot.vx = -Math.abs(shot.vx);
+                    }
+
+                    const hit = findHit(shot.x, shot.y);
+                    const ceiling = shot.y <= TOP + game.drop;
+                    if (hit || ceiling) settle(hit, ceiling);
+                }
+            }
+        }
+
+        for (const particle of game.particles) {
+            particle.life -= dt;
+            particle.vy += 500 * dt;
+            particle.x += particle.vx * dt;
+            particle.y += particle.vy * dt;
+        }
+        game.particles = game.particles.filter(p => p.life > 0);
+    }
+
+    function circle(x, y, radius, color) {
+        g.beginPath();
+        g.arc(x, y, radius, 0, Math.PI * 2);
+        g.fillStyle = color;
+        g.fill();
+    }
+
+    function text(value, x, y, size = 16, color = "#fff4cd") {
+        g.font = `700 ${size}px system-ui, sans-serif`;
+        g.textAlign = "center";
+        g.textBaseline = "middle";
+        g.fillStyle = color;
+        g.fillText(value, x, y);
+    }
+
+    function bubble(x, y, color, radius = R) {
+        circle(x, y + 2, radius, "#0006");
+
+        const fill = g.createRadialGradient(
+            x - radius * 0.35, y - radius * 0.4, 1,
+            x, y, radius
+        );
+        fill.addColorStop(0, "#ffffff");
+        fill.addColorStop(0.35, COLORS_BB[color]);
+        fill.addColorStop(1, COLORS_BB[color]);
+
+        circle(x, y, radius - 0.7, fill);
+        g.strokeStyle = "#ffffff66";
+        g.lineWidth = 1.5;
+        g.stroke();
+
+        text(SYMBOLS[color], x, y + 2, radius * 0.75, "#142033");
+    }
+
+    function drawAim() {
+        if (!canShoot()) return;
+
+        let x = CANNON.x;
+        let y = CANNON.y;
+        let vx = Math.cos(game.angle);
+        const vy = Math.sin(game.angle);
+
+        // Dự báo đường bóng, bao gồm nảy tường và vật cản.
+        for (let i = 0; i < 240; i++) {
+            x += vx * 5;
+            y += vy * 5;
+
+            if (x < LEFT) {
+                x = LEFT + LEFT - x;
+                vx = Math.abs(vx);
+            } else if (x > RIGHT) {
+                x = RIGHT - (x - RIGHT);
+                vx = -Math.abs(vx);
+            }
+
+            if (y <= TOP + game.drop || findHit(x, y)) break;
+
+            if (i % 4 === 0) {
+                circle(x, y, 2.3, "#ffffff88");
+            }
+        }
+    }
+
+    function drawMonk() {
+        // Sư thầy ở sau bệ phóng.
+        g.fillStyle = "#d28b25";
+        g.beginPath();
+        g.moveTo(218, 680);
+        g.lineTo(262, 680);
+        g.lineTo(276, 712);
+        g.lineTo(204, 712);
+        g.closePath();
+        g.fill();
+
+        circle(240, 674, 18, "#efc996");
+        circle(234, 671, 1.5, "#402414");
+        circle(246, 671, 1.5, "#402414");
+
+        g.strokeStyle = "#91532b";
+        g.lineWidth = 2;
+        g.beginPath();
+        g.arc(240, 676, 6, 0.15, Math.PI - 0.15);
+        g.stroke();
+
+        circle(203, 653, 9, "#efc996");
+        circle(277, 653, 9, "#efc996");
+    }
+
+    function render() {
+        g.clearRect(0, 0, BW, BH);
+
+        const background = g.createLinearGradient(0, 0, 0, BH);
+        background.addColorStop(0, "#172a43");
+        background.addColorStop(1, "#091624");
+        g.fillStyle = background;
+        g.fillRect(0, 0, BW, BH);
+
+        text("🪷 BẮN BÓNG AN LẠC 🪷", 240, 27, 18, "#fde68a");
+
+        // Hai thành bên.
+        g.fillStyle = "#9c733e";
+        g.fillRect(7, 48, 5, 520);
+        g.fillRect(468, 48, 5, 520);
+
+        // Trần hạ xuống sau các lượt bắn trượt.
+        const ceilingY = TOP + game.drop - R;
+        g.fillStyle = "#ffffff0c";
+        g.fillRect(13, 47, 454, Math.max(0, ceilingY - 47));
+        g.fillStyle = "#a88b60";
+        g.fillRect(13, ceilingY - 4, 454, 4);
+
+        // Vạch nguy hiểm.
+        g.save();
+        g.setLineDash([9, 7]);
+        g.strokeStyle = "#fb7185";
+        g.lineWidth = 2;
+        g.beginPath();
+        g.moveTo(14, DANGER);
+        g.lineTo(466, DANGER);
+        g.stroke();
+        g.restore();
+
+        text("KHÔNG ĐỂ BÓNG CHẠM VẠCH", 240, DANGER + 15, 11, "#fda4af");
+
+        drawAim();
+
+        for (let row = 0; row < ROWS; row++) {
+            for (let col = 0; col < COLS; col++) {
+                const color = game.grid[row][col];
+                if (color === null) continue;
+                const p = cellPosition(row, col);
+                bubble(p.x, p.y, color);
+            }
+        }
+
+        for (const particle of game.particles) {
+            g.save();
+            g.globalAlpha = Math.max(0, particle.life / particle.maxLife);
+            circle(
+                particle.x, particle.y,
+                particle.radius, COLORS_BB[particle.color]
+            );
+            g.restore();
+        }
+
+        drawMonk();
+
+        // Bệ phóng xoay theo hướng ngắm.
+        g.save();
+        g.translate(CANNON.x, CANNON.y);
+        g.rotate(game.angle);
+        g.fillStyle = "#d6a64c";
+        g.fillRect(0, -9, 36, 18);
+        g.strokeStyle = "#fde68a";
+        g.strokeRect(0, -9, 36, 18);
+        g.restore();
+
+        circle(CANNON.x, CANNON.y, 27, "#142033");
+        bubble(CANNON.x, CANNON.y, game.current);
+
+        text("TIẾP THEO", 90, 612, 12, "#cbd5e1");
+        bubble(90, 647, game.next, 20);
+        text("X / Đổi bóng", 90, 680, 11, "#94a3b8");
+        text(`MÀN ${game.level}`, 390, 643, 18, "#fde68a");
+
+        if (game.shot) {
+            bubble(game.shot.x, game.shot.y, game.shot.color);
+        }
+
+        if (game.paused || game.phase === "won" || game.phase === "lost") {
+            g.fillStyle = "#020617c9";
+            g.fillRect(20, 215, 440, 160);
+
+            const title = game.paused
+                ? "⏸ TẠM DỪNG"
+                : game.phase === "won"
+                    ? "🎉 HOÀN THÀNH MÀN!"
+                    : "HẾT LƯỢT RỒI";
+
+            text(title, 240, 260, 26, "#fde68a");
+
+            const detail = game.paused
+                ? "Bấm Tiếp tục hoặc phím P"
+                : game.phase === "won"
+                    ? "Bấm Màn tiếp ở phía dưới"
+                    : "Bấm Chơi lại để bắt đầu ván mới";
+
+            text(detail, 240, 305, 17, "#e2e8f0");
+            text(`Điểm: ${game.score}`, 240, 342, 16, "#6ee7b7");
+        }
+    }
+
+    function frame(now) {
+        if (!window.anlacBubbleActive) return;
+        const dt = limit((now - game.last) / 1000, 0, 0.035);
+        game.last = now;
+        update(dt);
+        render();
+        game.raf = requestAnimationFrame(frame);
+    }
+
+    function aimAt(event) {
+        const rect = boardCanvas.getBoundingClientRect();
+        const x = (event.clientX - rect.left) * BW / rect.width;
+        const y = (event.clientY - rect.top) * BH / rect.height;
+
+        // Không bắn ngược xuống dưới.
+        if (y >= CANNON.y - 15) return false;
+
+        game.angle = limit(
+            Math.atan2(y - CANNON.y, x - CANNON.x),
+            MIN_ANGLE,
+            MAX_ANGLE
+        );
+        return true;
+    }
+
+    boardCanvas.addEventListener("pointerdown", event => {
+        if (event.button !== 0 || !canShoot() || !aimAt(event)) return;
+        game.pointer = event.pointerId;
+        boardCanvas.setPointerCapture(event.pointerId);
+        event.preventDefault();
+    });
+
+    boardCanvas.addEventListener("pointermove", event => {
+        if (!canShoot()) return;
+
+        if (event.pointerType === "mouse" ||
+            game.pointer === event.pointerId) {
+            aimAt(event);
+        }
+    });
+
+    boardCanvas.addEventListener("pointerup", event => {
+        if (game.pointer !== event.pointerId) return;
+        const validAim = aimAt(event);
+        game.pointer = null;
+
+        if (boardCanvas.hasPointerCapture(event.pointerId)) {
+            boardCanvas.releasePointerCapture(event.pointerId);
+        }
+
+        if (validAim) shoot();
+    });
+
+    boardCanvas.addEventListener("pointercancel", () => {
+        game.pointer = null;
+    });
+
+    entrance.addEventListener("click", enterGame);
+    el("bbExit").addEventListener("click", exitGame);
+    el("bbShoot").addEventListener("click", shoot);
+    el("bbSwap").addEventListener("click", swap);
+    el("bbPause").addEventListener("click", pause);
+
+    el("bbRestart").addEventListener("click", () => {
+        if (game.phase === "playing") {
+            const agreed = window.confirm(
+                "Bắt đầu ván mới từ màn 1? Công đức đã nhận vẫn được giữ."
+            );
+            if (!agreed) return;
+        }
+        startLevel(true);
+    });
+
+    el("bbNext").addEventListener("click", () => {
+        if (game.phase !== "won") return;
+        game.level++;
+        startLevel();
+    });
+
+    document.addEventListener("keydown", event => {
+        // Ngoài màn hình này, không chiếm bất kỳ phím nào.
+        if (!window.anlacBubbleActive) return;
+
+        const allowed = [
+            "ArrowLeft", "ArrowRight", "Space",
+            "KeyX", "KeyP", "Escape"
+        ];
+        if (!allowed.includes(event.code)) return;
+
+        event.preventDefault();
+        event.stopImmediatePropagation();
+
+        if (event.code === "ArrowLeft" || event.code === "ArrowRight") {
+            if (game.phase === "playing" && !game.paused) {
+                game.keys.add(event.code);
+            }
+            return;
+        }
+
+        if (event.repeat) return;
+        if (event.code === "Space") shoot();
+        if (event.code === "KeyX") swap();
+        if (event.code === "KeyP") pause();
+        if (event.code === "Escape") exitGame();
+    }, true);
+
+    document.addEventListener("keyup", event => {
+        if (!window.anlacBubbleActive) return;
+        game.keys.delete(event.code);
+    }, true);
+
+    window.addEventListener("blur", () => {
+        game.keys.clear();
+        game.pointer = null;
+        if (window.anlacBubbleActive &&
+            game.phase === "playing" && !game.paused) {
+            pause();
+        }
+    });
+
+    document.addEventListener("visibilitychange", () => {
+        if (document.hidden && window.anlacBubbleActive &&
+            game.phase === "playing" && !game.paused) {
+            pause();
+        }
+    });
+
+    window.addEventListener("resize", fitCanvas);
+
+    if ("ResizeObserver" in window) {
+        new ResizeObserver(fitCanvas).observe(el("bbStage"));
+    }
+})();
 </script>
 </body>
 </html>
