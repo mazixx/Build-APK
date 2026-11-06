@@ -1,0 +1,2574 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Chùa An Lạc — Thiền Online</title>
+<style>
+:root{
+    color-scheme:dark;
+    --gold:#fbbf24;
+    --text:#fef3c7;
+    --border:rgba(251,191,36,.35);
+}
+*{box-sizing:border-box}
+html,body{width:100%;height:100%;margin:0}
+body{
+    overflow:hidden;
+    background:#140904;
+    color:var(--text);
+    font-family:system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+button,input{font:inherit}
+button{
+    color:var(--text);
+    background:#382213;
+    border:1px solid var(--border);
+    border-radius:12px;
+    cursor:pointer;
+    padding:9px 12px;
+    touch-action:manipulation;
+}
+button:hover{filter:brightness(1.18)}
+button:active{transform:scale(.97)}
+button:disabled{opacity:.55;cursor:not-allowed}
+button:focus-visible,input:focus-visible{
+    outline:2px solid #67e8f9;
+    outline-offset:3px;
+}
+[hidden]{display:none!important}
+canvas{
+    position:fixed;
+    inset:0;
+    width:100%;
+    height:100%;
+    display:block;
+    z-index:0;
+    touch-action:manipulation;
+}
+#hud{
+    position:fixed;
+    z-index:5;
+    top:10px;
+    left:10px;
+    right:10px;
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap:10px;
+    pointer-events:none;
+}
+.panel{
+    background:rgba(16,12,8,.90);
+    border:1px solid var(--border);
+    border-radius:16px;
+    padding:12px;
+    box-shadow:0 6px 24px #0005;
+    pointer-events:auto;
+}
+h1{font-size:20px;margin:0 0 5px;color:#fcd34d}
+.small{font-size:12px;line-height:1.5;color:#d6c6a4}
+#zoneName{color:#a7f3d0}
+#titleBadge{color:#e9bfff;font-size:12px}
+#meritValue{font-size:25px;font-weight:800;color:#fbbf24}
+.right-panel{display:flex;align-items:center;gap:12px}
+.zone-buttons{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+#controls{
+    position:fixed;
+    z-index:5;
+    bottom:10px;
+    left:50%;
+    transform:translateX(-50%);
+    width:min(960px,calc(100% - 20px));
+    display:grid;
+    gap:8px;
+}
+#chatForm{display:flex;align-items:center;gap:8px;padding:8px 12px}
+#chatInput{
+    min-width:0;
+    flex:1;
+    border:0;
+    background:transparent;
+    color:#fff3cc;
+    padding:8px 0;
+    outline:none;
+}
+#actionBar{
+    display:flex;
+    align-items:center;
+    gap:7px;
+    overflow-x:auto;
+    padding:9px;
+    scrollbar-width:thin;
+}
+#indoorActions,#outdoorActions,#cinemaActions,#gateActions{display:flex;gap:7px}
+.action{min-width:73px;white-space:nowrap;font-size:12px;font-weight:700}
+.action span{display:block;font-size:22px;margin-bottom:3px}
+.green{background:#104d3b;border-color:#34d399}
+.purple{background:#422060;border-color:#c084fc}
+.active{background:#805017;border-color:#fde68a}
+#notice{
+    position:fixed;
+    z-index:8;
+    left:50%;
+    top:105px;
+    transform:translateX(-50%);
+    max-width:min(650px,90vw);
+    padding:10px 16px;
+    background:rgba(0,0,0,.88);
+    border:1px solid var(--border);
+    border-radius:14px;
+    font-size:13px;
+    text-align:center;
+    pointer-events:none;
+}
+.modal{
+    position:fixed;
+    z-index:20;
+    inset:0;
+    background:rgba(0,0,0,.78);
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    padding:14px;
+}
+.dialog{
+    width:min(680px,100%);
+    max-height:90vh;
+    overflow:auto;
+    background:linear-gradient(#251737,#1b1009);
+    border:1px solid #b98a43;
+    border-radius:20px;
+    padding:20px;
+    box-shadow:0 15px 70px #000;
+}
+.dialog.small-dialog{width:min(450px,100%)}
+.dialog h2{margin:0;color:#fcd34d;font-size:22px}
+.dialog-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:12px;
+    margin-bottom:16px;
+}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.between{justify-content:space-between}
+#quizQuestion{font-size:18px;line-height:1.6;margin:18px 0}
+#quizOptions{display:grid;gap:9px}
+.option{width:100%;text-align:left;line-height:1.5;background:#30203e}
+.option.correct{background:#125436;border-color:#6ee7b7;opacity:1}
+.option.wrong{background:#702626;border-color:#fda4af;opacity:1}
+#quizExplanation{
+    margin-top:14px;
+    padding:12px;
+    background:#0005;
+    border-radius:12px;
+    line-height:1.6;
+    font-size:14px;
+}
+#quizResult{line-height:1.8;text-align:center}
+#quizResult strong{color:#6ee7b7}
+.dialog-footer{margin-top:18px;display:flex;justify-content:space-between;gap:10px}
+.field{display:grid;gap:7px;margin:16px 0}
+.field input{
+    width:100%;
+    background:#0006;
+    border:1px solid #b98a43;
+    border-radius:10px;
+    padding:12px;
+    color:#fff;
+}
+#colorPicker{display:flex;gap:10px;flex-wrap:wrap}
+.color-button{width:50px;height:44px}
+.color-button.selected{outline:3px solid #fde68a;outline-offset:2px}
+.rank-row{
+    display:flex;
+    justify-content:space-between;
+    gap:10px;
+    padding:12px;
+    margin:8px 0;
+    border:1px solid #765026;
+    border-radius:12px;
+}
+.rank-row.me{background:#76502655;border-color:#fbbf24}
+.recipe-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(275px,1fr));
+    gap:10px;
+    margin-top:10px;
+}
+.recipe-card{
+    background:rgba(0,0,0,.42);
+    border:1px solid #765026;
+    border-radius:12px;
+    padding:10px 12px;
+    display:flex;
+    flex-direction:column;
+    justify-content:space-between;
+    gap:8px;
+}
+.recipe-card.pinned{
+    border-color:#34d399;
+    background:rgba(16,77,59,.38);
+}
+#errorBox{
+    position:fixed;
+    z-index:100;
+    left:10px;
+    right:10px;
+    bottom:10px;
+    max-height:45vh;
+    overflow:auto;
+    white-space:pre-wrap;
+    background:#450b0b;
+    border:2px solid #ff8585;
+    padding:16px;
+    border-radius:12px;
+    color:white;
+    user-select:text;
+    font-size:13px;
+}
+/* CSS Tích hợp Rạp Phim & Góc Nhìn */
+#cinemaScreen {
+    position: fixed;
+    z-index: 3;
+    top: 12%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: min(460px, 78vw);
+    aspect-ratio: 16 / 9;
+    background: #000;
+    border: 3px solid #d8a737;
+    border-radius: 12px;
+    box-shadow: 0 0 35px rgba(251, 191, 36, 0.45);
+    overflow: hidden;
+    transition: transform 0.4s ease, opacity 0.3s ease;
+}
+#cinemaScreen iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+}
+#cinemaControls {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    padding: 8px 12px;
+    flex-wrap: wrap;
+}
+#ytInput {
+    flex: 1;
+    min-width: 180px;
+    background: rgba(0, 0, 0, 0.5);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 7px 10px;
+    color: var(--text);
+}
+body.fpv-mode #cinemaScreen {
+    transform: translate(-50%, 15px) scale(1.38);
+    z-index: 4;
+}
+@media(max-width:600px){
+    h1{font-size:16px}
+    .panel{padding:9px}
+    #hud{gap:6px}
+    #meritValue{font-size:20px}
+    .right-panel{gap:7px}
+    .zone-buttons button{font-size:11px;padding:6px 8px}
+    #titleBadge{font-size:10px}
+    #notice{top:125px;font-size:12px}
+    #chatLabel{display:none}
+    .action{min-width:65px;padding:8px}
+    .dialog{padding:15px}
+}
+@media(prefers-reduced-motion:reduce){
+    button:active{transform:none}
+}
+</style>
+</head>
+<body>
+
+<canvas id="templeCanvas" aria-label="Không gian chùa mô phỏng"></canvas>
+<div id="cinemaScreen" hidden>
+    <div id="ytPlayer"></div>
+</div>
+<header id="hud">
+    <section class="panel">
+        <h1>🪷 Chùa An Lạc</h1>
+        <div id="titleBadge">Hành Giả</div>
+        <div class="small">
+            <span id="zoneName">Chánh Điện</span>
+            · <span id="npcCount">0</span> NPC mô phỏng
+        </div>
+        <div class="zone-buttons">
+            <button id="switchZoneBtn" type="button">🌿 Ra Sân Chùa</button>
+            <button id="cinemaZoneBtn" type="button" class="purple">🎬 Vào Rạp Phim</button>
+            <button id="gateZoneBtn" type="button" class="green">⛩️ Ra Cổng (Bếp Chay)</button>
+        </div>
+    </section>
+
+    <section class="panel right-panel">
+        <div>
+            <div class="small">CÔNG ĐỨC</div>
+            <div id="meritValue">0</div>
+        </div>
+        <button id="audioBtn" type="button" aria-label="Bật hoặc tắt âm thanh">🔊</button>
+    </section>
+</header>
+
+<div id="notice" role="status" hidden></div>
+
+<footer id="controls">
+    <div id="cinemaControls" class="panel" hidden>
+        <span>🎬</span>
+        <input id="ytInput" type="text" placeholder="Dán link youtube.com/... để chiếu">
+        <button id="addVideoBtn" type="button" class="green">Thêm Video</button>
+        <button id="skipVideoBtn" type="button" class="purple">⏭️ Skip</button>
+        <button id="toggleScreenBtn" type="button">📺 Ẩn/Hiện Màn Hình</button>
+    </div>
+
+    <form id="chatForm" class="panel">
+        <label for="chatInput" id="chatLabel">💬</label>
+        <input id="chatInput" maxlength="60" autocomplete="off"
+               aria-label="Lời đàm đạo"
+               placeholder="Nhập lời đàm đạo…">
+        <button type="submit">Gửi</button>
+    </form>
+
+    <nav id="actionBar" class="panel" aria-label="Các thao tác">
+        <div id="indoorActions">
+            <button id="moBtn" class="action" type="button"><span>🐟</span>Gõ Mõ</button>
+            <button id="chantBtn" class="action" type="button"><span>📜</span>Tụng Kinh</button>
+            <button id="beadsBtn" class="action" type="button"><span>📿</span>Niệm Hạt</button>
+            <button id="bowBtn" class="action" type="button"><span>🙏</span>Lạy Phật</button>
+            <button id="meditateBtn" class="action active" type="button"><span>🧘</span>Xả Thiền</button>
+        </div>
+        <div id="outdoorActions" hidden>
+            <button id="feedBtn" class="action green" type="button"><span>🐠</span>Cho Cá Ăn +3</button>
+            <button id="feedChickenBtn" class="action active" type="button"><span>🐔</span>Cho Gà Ăn +3</button>
+        </div>
+        <div id="cinemaActions" hidden>
+            <button id="clapBtn" class="action" type="button"><span>👏</span>Vỗ Tay</button>
+            <button id="danceBtn" class="action" type="button"><span>💃</span>Nhảy Múa</button>
+            <button id="camViewBtn" class="action" type="button"><span>🎥</span>Góc Nhìn</button>
+        </div>
+        <div id="gateActions" hidden>
+            <button id="menuBookBtn" class="action active" type="button"><span>📖</span>Menu 10 Món</button>
+            <button id="serveDishBtn" class="action green" type="button"><span>🛎️</span>Giao Món +100</button>
+            <button id="clearDishBtn" class="action" type="button"><span>🗑️</span>Làm Lại Tô</button>
+            <button id="nextCustBtn" class="action purple" type="button"><span>🙋</span>Đổi Khách</button>
+        </div>
+        <button id="quizBtn" class="action purple" type="button"><span>🧠</span>Thi −1.000</button>
+        <button id="leaderBtn" class="action" type="button"><span>🏆</span>Bảng Vàng</button>
+        <button id="profileBtn" class="action" type="button"><span>⚙️</span>Đạo Hiệu</button>
+    </nav>
+</footer>
+
+<section id="recipeModal" class="modal" hidden>
+    <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="recipeHeading">
+        <div class="dialog-head">
+            <h2 id="recipeHeading">📖 Thực Đơn 10 Món Chay Thanh Tịnh</h2>
+            <button type="button" data-close="recipeModal" aria-label="Đóng">✕</button>
+        </div>
+        <p class="small">Nhấp vào các khay nguyên liệu trên bàn bếp để chế biến đúng công thức khách gọi (+100 Công Đức/món đúng, 0 điểm nếu làm sai). Bạn cũng có thể bấm <b>"Chọn Làm Món Khách Gọi"</b> để ghim món bất kỳ trong 10 món!</p>
+        <div id="recipeList" class="recipe-grid"></div>
+    </div>
+</section>
+
+<section id="quizModal" class="modal" hidden>
+    <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="quizHeading">
+        <div class="dialog-head">
+            <h2 id="quizHeading">📜 Khảo Thí 20 Câu</h2>
+            <button type="button" data-close="quizModal" aria-label="Đóng">✕</button>
+        </div>
+        <p class="small">Mỗi lượt mới: 1.000 Công Đức. Đóng bảng rồi mở lại sẽ tiếp tục lượt đang làm, không thu phí lần nữa.</p>
+        <div class="row between small">
+            <span id="quizProgress"></span>
+            <span id="quizScore"></span>
+        </div>
+        <div id="quizQuestion"></div>
+        <div id="quizOptions"></div>
+        <div id="quizExplanation" hidden></div>
+        <div id="quizResult" hidden></div>
+        <div class="dialog-footer">
+            <button id="restartQuizBtn" type="button">Thi mới −1.000</button>
+            <button id="nextQuizBtn" class="green" type="button" hidden>Câu tiếp theo</button>
+        </div>
+    </div>
+</section>
+
+<section id="profileModal" class="modal" hidden>
+    <div class="dialog small-dialog" role="dialog" aria-modal="true" aria-labelledby="profileHeading">
+        <div class="dialog-head">
+            <h2 id="profileHeading">Đạo Hiệu</h2>
+            <button type="button" data-close="profileModal" aria-label="Đóng">✕</button>
+        </div>
+        <form id="profileForm">
+            <label class="field">
+                Tên nhân vật
+                <input id="nameInput" maxlength="20" required>
+            </label>
+            <div class="field">
+                <span>Màu pháp phục</span>
+                <div id="colorPicker"></div>
+            </div>
+            <button class="green" type="submit">Lưu hồ sơ</button>
+        </form>
+        <p class="small">Hồ sơ được lưu trên trình duyệt này, không đồng bộ giữa các thiết bị.</p>
+    </div>
+</section>
+
+<section id="leaderModal" class="modal" hidden>
+    <div class="dialog small-dialog" role="dialog" aria-modal="true" aria-labelledby="leaderHeading">
+        <div class="dialog-head">
+            <h2 id="leaderHeading">🏆 Bảng Vàng</h2>
+            <button type="button" data-close="leaderModal" aria-label="Đóng">✕</button>
+        </div>
+        <p class="small">Bảng xếp hạng minh họa gồm nhân vật của bạn và NPC, không phải dữ liệu trực tuyến.</p>
+        <div id="leaderList"></div>
+    </div>
+</section>
+
+<pre id="errorBox" role="alert" hidden></pre>
+
+<script>
+"use strict";
+
+/* ================= TIỆN ÍCH VÀ BÁO LỖI ================= */
+const $ = id => document.getElementById(id);
+const clamp = (n, min, max) => Math.max(min, Math.min(max, n));
+const rand = (min, max) => min + Math.random() * (max - min);
+const pick = array => array[Math.floor(Math.random() * array.length)];
+const TAU = Math.PI * 2;
+
+function reportError(message) {
+    const box = $("errorBox");
+    box.hidden = false;
+    box.textContent =
+        "Có lỗi JavaScript. Hãy gửi nội dung dưới đây để kiểm tra:\n\n" +
+        message;
+}
+window.addEventListener("error", event => {
+    reportError(
+        event.message + "\nDòng: " + event.lineno +
+        "\n" + (event.error?.stack || "")
+    );
+});
+window.addEventListener("unhandledrejection", event => {
+    reportError(String(event.reason?.stack || event.reason));
+});
+
+function readStorage(key, fallback) {
+    try {
+        const value = localStorage.getItem(key);
+        return value === null ? fallback : value;
+    } catch (_) {
+        return fallback;
+    }
+}
+function writeStorage(key, value) {
+    try {
+        localStorage.setItem(key, String(value));
+        return true;
+    } catch (_) {
+        return false;
+    }
+}
+function readNumber(key, fallback, min, max) {
+    const raw = readStorage(key, String(fallback));
+    if (String(raw).trim() === "") return fallback;
+    const value = Number(raw);
+    return Number.isFinite(value)
+        ? clamp(Math.trunc(value), min, max)
+        : fallback;
+}
+
+let noticeTimer = 0;
+function notice(message) {
+    $("notice").textContent = message;
+    $("notice").hidden = false;
+    clearTimeout(noticeTimer);
+    noticeTimer = setTimeout(() => $("notice").hidden = true, 4200);
+}
+
+let lastFocus = null;
+function openModal(id) {
+    lastFocus = document.activeElement;
+    $(id).hidden = false;
+    $(id).querySelector("button,input")?.focus();
+}
+function closeModal(id) {
+    $(id).hidden = true;
+    lastFocus?.focus?.();
+}
+document.querySelectorAll("[data-close]").forEach(button => {
+    button.addEventListener("click", () => closeModal(button.dataset.close));
+});
+document.querySelectorAll(".modal").forEach(modal => {
+    modal.addEventListener("click", event => {
+        if (event.target === modal) closeModal(modal.id);
+    });
+});
+document.addEventListener("keydown", event => {
+    const modal = [...document.querySelectorAll(".modal")].find(el => !el.hidden);
+    if (!modal) return;
+    if (event.key === "Escape") {
+        closeModal(modal.id);
+        return;
+    }
+    if (event.key !== "Tab") return;
+    const focusable = [...modal.querySelectorAll("button,input")]
+        .filter(el => !el.disabled && el.getClientRects().length);
+    if (!focusable.length) return;
+    const first = focusable[0], last = focusable[focusable.length - 1];
+    if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+    } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+    }
+});
+
+/* ================= HỒ SƠ VÀ CÔNG ĐỨC ================= */
+const COLORS = [
+    {name:"Lam", body:"#5088ce", robe:"#254e89"},
+    {name:"Nâu", body:"#ad733b", robe:"#62401f"},
+    {name:"Vàng", body:"#e5a82d", robe:"#a8630d"},
+    {name:"Xám", body:"#8a929f", robe:"#4e5868"},
+    {name:"Đỏ", body:"#b34846", robe:"#6e262e"}
+];
+const PLAYER_TITLES = [
+    "Hành Giả",
+    "Sa-Di Tinh Tấn",
+    "Đại Đức Trí Tuệ",
+    "Đại Luận Sư Uyên Bác",
+    "Phật Hoàng Toàn Giác"
+];
+const TITLE_COLORS = ["#d6c7ad","#6ee7b7","#7dd3fc","#e9a8ff","#fde68a"];
+const TITLE_RGB = ["214,199,173","110,231,183","125,211,252","233,168,255","253,230,138"];
+const NPC_TITLES = [
+    "Khách Vãn Cảnh",
+    "Hành Giả An Nhiên",
+    "Thiện Hữu Tinh Tấn",
+    "Liên Hoa Thanh Tịnh",
+    "Trúc Lâm Thiền Khách"
+];
+const BOT_NAMES = [
+    "Thích Thanh Tịnh","Tuệ Giác","An Nhàn Cư Sĩ","Mây Thong Dong",
+    "Tâm Bất Biến","Hương Sen Trắng","Vô Ưu Khách","Trúc Lâm Khách",
+    "Thích Phước Tâm","Tự Tại Nhân","An Nhiên","Minh Tâm"
+];
+const INDOOR_CHATS = [
+    "Nam Mô A Di Đà Phật 🙏","Tâm an vạn sự an.",
+    "Chúc bạn một ngày an lạc.","Lắng nghe tiếng mõ…","Tinh tấn mỗi ngày."
+];
+const OUTDOOR_CHATS = [
+    "Hồ sen thật yên bình.","Cá Koi bơi đẹp quá!",
+    "Đàn gà bên chuồng dễ thương ghê 🐤","Gió sân chùa mát quá.","Cùng rải thóc cho gà nhé!"
+];
+const CINEMA_CHATS = [
+    "Phim hôm nay hay quá 🎬","Cảm ơn chủ rạp đã chiếu phim!",
+    "Góc nhìn đẹp thật!","Vỗ tay nào mọi người 👏","Âm thanh sống động quá!"
+];
+
+const state = {
+    zone: "INDOOR",
+    merit: readNumber("user_merit", 1200, -1, Number.MAX_SAFE_INTEGER),
+    name: String(readStorage("player_name", "Thích Thanh Tịnh")).slice(0,20),
+    color: readNumber("player_color", 2, 0, COLORS.length - 1),
+    tier: readNumber("user_title_tier", 0, 0, 4),
+    meditating: true,
+    chanting: false,
+    muted: false,
+    seatIndex: 0,
+    firstPerson: false,
+    screenVisible: true
+};
+let t = 0;
+const player = {
+    isPlayer:true, name:state.name, color:state.color,
+    tier:state.tier, phase:0, action:"", actionStart:-100,
+    chat:"", chatUntil:0
+};
+
+function saveMerit() {
+    const value = Number(state.merit);
+    state.merit = Number.isFinite(value)
+        ? clamp(Math.trunc(value), -1, Number.MAX_SAFE_INTEGER)
+        : -1;
+    $("meritValue").textContent = state.merit.toLocaleString("vi-VN");
+    writeStorage("user_merit", state.merit);
+}
+function addMerit(amount) {
+    const before = state.merit;
+    state.merit += amount;
+    saveMerit();
+    return state.merit - before;
+}
+function syncUI() {
+    const indoor = state.zone === "INDOOR";
+    const outdoor = state.zone === "OUTDOOR";
+    const cinema = state.zone === "CINEMA";
+    const gate = state.zone === "GATE";
+
+    $("zoneName").textContent = indoor
+        ? "Chánh Điện"
+        : outdoor
+        ? "Sân Chùa, Hồ Koi & Chuồng Gà"
+        : cinema
+        ? "Rạp Chiếu Phim An Lạc"
+        : "Cổng Chùa — Quầy Bếp Chay (Góc Nhìn Thứ Nhất)";
+
+    $("switchZoneBtn").textContent = outdoor ? "🛕 Vào Chánh Điện" : "🌿 Ra Sân Chùa";
+    $("cinemaZoneBtn").textContent = cinema ? "🛕 Về Chánh Điện" : "🎬 Vào Rạp Phim";
+    $("gateZoneBtn").textContent = gate ? "🛕 Về Chánh Điện" : "⛩️ Ra Cổng (Bếp Chay)";
+
+    $("indoorActions").hidden = !indoor;
+    $("outdoorActions").hidden = !outdoor;
+    $("cinemaActions").hidden = !cinema;
+    $("gateActions").hidden = !gate;
+    $("cinemaControls").hidden = !cinema;
+    $("cinemaScreen").hidden = !(cinema && state.screenVisible);
+
+    if (!cinema && state.firstPerson) {
+        state.firstPerson = false;
+        document.body.classList.remove("fpv-mode");
+        $("camViewBtn").classList.remove("active");
+        $("camViewBtn").innerHTML = "<span>🎥</span>Góc Nhìn";
+    }
+
+    $("meditateBtn").innerHTML = state.meditating
+        ? "<span>🧘</span>Xả Thiền" : "<span>🚶</span>Nhập Thiền";
+    $("meditateBtn").classList.toggle("active", state.meditating);
+    $("chantBtn").innerHTML = state.chanting
+        ? "<span>📜</span>Dừng Tụng" : "<span>📜</span>Tụng Kinh";
+    $("chantBtn").classList.toggle("active", state.chanting);
+    $("titleBadge").textContent = PLAYER_TITLES[state.tier];
+    $("audioBtn").textContent = state.muted ? "🔇" : "🔊";
+}
+
+/* ================= ÂM THANH: KHÔNG CHẶN GAME NẾU LỖI ================= */
+let audio = null;
+function sound(kind) {
+    if (state.muted) return;
+    try {
+        const AudioClass = window.AudioContext || window.webkitAudioContext;
+        if (!AudioClass) return;
+        if (!audio) audio = new AudioClass();
+        if (audio.state === "suspended") audio.resume().catch(() => {});
+        const now = audio.currentTime;
+        const configs = {
+            mo:[420,180,.12,"sine"],
+            bead:[820,220,.07,"triangle"],
+            bell:[520,515,1.4,"sine"],
+            palm:[110,35,.65,"triangle"]
+        };
+        const [start,end,duration,type] = configs[kind] || configs.bead;
+        const osc = audio.createOscillator();
+        const gain = audio.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(start,now);
+        osc.frequency.exponentialRampToValueAtTime(end,now + duration);
+        gain.gain.setValueAtTime(kind === "bell" ? .18 : .12,now);
+        gain.gain.exponentialRampToValueAtTime(.001,now + duration);
+        osc.connect(gain);
+        gain.connect(audio.destination);
+        osc.start(now);
+        osc.stop(now + duration);
+        osc.onended = () => {osc.disconnect();gain.disconnect();};
+    } catch (error) {
+        console.warn("Âm thanh tạm không khả dụng:",error);
+    }
+}
+
+/* ================= DỮ LIỆU CHẾ ĐỘ RA CỔNG: 10 MÓN CHAY & NGUYÊN LIỆU ================= */
+const INGREDIENTS = [
+    {id:"bun", name:"Bún/Phở", icon:"🍜", color:"#fef9c3"},
+    {id:"com", name:"Cơm Trắng", icon:"🍚", color:"#f8fafc"},
+    {id:"dauhu", name:"Đậu Hũ", icon:"🧈", color:"#fde047"},
+    {id:"nam", name:"Nấm Hương", icon:"🍄", color:"#d6a253"},
+    {id:"sen", name:"Hạt Sen", icon:"🪷", color:"#f472b6"},
+    {id:"rau", name:"Rau Thơm", icon:"🥬", color:"#4ade80"},
+    {id:"nuoc", name:"Nước Dùng", icon:"🥣", color:"#fb923c"},
+    {id:"tuong", name:"Sốt Tương", icon:"🫙", color:"#a16207"},
+    {id:"banhtrang", name:"Bánh Tráng", icon:"🫓", color:"#e2e8f0"},
+    {id:"rongbien", name:"Rong Biển", icon:"🌿", color:"#15803d"},
+    {id:"duong", name:"Đường Phèn", icon:"🍯", color:"#facc15"},
+    {id:"tra", name:"Lá Trà", icon:"🍵", color:"#84cc16"}
+];
+const ING_MAP = Object.fromEntries(INGREDIENTS.map(item => [item.id, item]));
+
+const VEGAN_MENU = [
+    {id:1, name:"Phở Chay An Lạc", icon:"🍜", recipe:["bun","nuoc","dauhu","nam"]},
+    {id:2, name:"Bún Riêu Chay", icon:"🍲", recipe:["bun","nuoc","dauhu","rau"]},
+    {id:3, name:"Cơm Sen Hoàng Kim", icon:"🍛", recipe:["com","sen","nam","rau"]},
+    {id:4, name:"Đậu Hũ Sốt Nấm", icon:"🥘", recipe:["dauhu","nam","tuong"]},
+    {id:5, name:"Gỏi Cuốn Thanh Tịnh", icon:"🌯", recipe:["banhtrang","bun","rau","dauhu"]},
+    {id:6, name:"Canh Rong Biển Đậu Hũ", icon:"🥣", recipe:["rongbien","dauhu","nam","nuoc"]},
+    {id:7, name:"Mì Quảng Chay", icon:"🍝", recipe:["bun","dauhu","rau","tuong"]},
+    {id:8, name:"Nấm Kho Tiêu Xanh", icon:"🍄", recipe:["nam","tuong","duong"]},
+    {id:9, name:"Chè Hạt Sen Long Nhãn", icon:"🍨", recipe:["sen","duong","nuoc"]},
+    {id:10, name:"Trà Sen Cúc Vàng", icon:"🍵", recipe:["tra","sen","nuoc"]}
+];
+
+const gateState = {
+    bowl: [],
+    customer: null,
+    servedCount: 0,
+    pinnedDishId: null,
+    hitboxes: [],
+    handBounce: 0
+};
+
+function formatRecipeIcons(recipeIds) {
+    return recipeIds.map(id => `${ING_MAP[id].icon} ${ING_MAP[id].name}`).join(" + ");
+}
+
+function spawnGateCustomer() {
+    const dish = gateState.pinnedDishId
+        ? (VEGAN_MENU.find(d => d.id === gateState.pinnedDishId) || pick(VEGAN_MENU))
+        : pick(VEGAN_MENU);
+    gateState.customer = {
+        name: pick(BOT_NAMES),
+        color: Math.floor(Math.random() * COLORS.length),
+        tier: randomTier(),
+        dish,
+        arrivalTime: t,
+        mood: "WAIT",
+        leaveAt: 0,
+        message: `Cho tôi 1 phần ${dish.icon} ${dish.name} nhé!`
+    };
+    gateState.bowl = [];
+}
+
+function addIngredientToBowl(ingId) {
+    if (state.zone !== "GATE") return;
+    if (gateState.bowl.length >= 5) {
+        notice("Tô đã đầy (tối đa 5 nguyên liệu)! Hãy bấm Giao Món hoặc Làm Lại Tô.");
+        return;
+    }
+    gateState.bowl.push(ingId);
+    gateState.handBounce = t + 0.25;
+    sound("bead");
+}
+
+function serveCurrentDish() {
+    if (state.zone !== "GATE") return;
+    const cust = gateState.customer;
+    if (!cust || cust.mood !== "WAIT") {
+        notice("Đang chờ khách mới bước tới quầy...");
+        return;
+    }
+    if (gateState.bowl.length === 0) {
+        notice("Tô đang trống! Hãy chọn nguyên liệu trên bàn bếp trước khi giao món.");
+        return;
+    }
+
+    const expected = [...cust.dish.recipe].sort().join(",");
+    const actual = [...gateState.bowl].sort().join(",");
+
+    if (expected === actual) {
+        const gained = addMerit(100);
+        gateState.servedCount++;
+        cust.mood = "HAPPY";
+        cust.message = `Đúng vị ${cust.dish.name} rồi! Xin cảm tạ +100 Công Đức 🙏`;
+        cust.leaveAt = t + 1.8;
+        sound("bell");
+        floatText(gained > 0 ? "+100 Công Đức 🍱✨" : "Đã đạt giới hạn", W / 2, area.top + area.height * 0.35, "#6ee7b7");
+        notice(`🎉 Tuyệt vời! Bạn đã làm đúng món ${cust.dish.name} và nhận +100 Công Đức!`);
+    } else {
+        cust.mood = "SAD";
+        const correctFormula = formatRecipeIcons(cust.dish.recipe);
+        cust.message = `Món này chưa đúng công thức rồi… Cần: ${correctFormula}`;
+        cust.leaveAt = t + 2.6;
+        sound("mo");
+        floatText("+0 Công Đức (Sai công thức)", W / 2, area.top + area.height * 0.35, "#fda4af");
+        notice(`❌ Sai công thức (0 điểm)! ${cust.dish.name} cần: ${correctFormula}`);
+    }
+    gateState.bowl = [];
+}
+
+function renderRecipeModal() {
+    const wrap = $("recipeList");
+    wrap.innerHTML = "";
+    VEGAN_MENU.forEach(dish => {
+        const card = document.createElement("div");
+        const isPinned = gateState.pinnedDishId === dish.id;
+        card.className = "recipe-card" + (isPinned ? " pinned" : "");
+
+        const top = document.createElement("div");
+        const title = document.createElement("strong");
+        title.style.color = "#fcd34d";
+        title.textContent = `${dish.id}. ${dish.icon} ${dish.name}`;
+        const desc = document.createElement("div");
+        desc.className = "small";
+        desc.style.marginTop = "4px";
+        desc.textContent = "Công thức: " + formatRecipeIcons(dish.recipe);
+        top.append(title, desc);
+
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = isPinned ? "green" : "";
+        btn.style.fontSize = "12px";
+        btn.style.padding = "6px 10px";
+        btn.textContent = isPinned ? "✅ Đang chọn làm món khách gọi (Bấm để bỏ ghim)" : "📌 Chọn làm món khách gọi";
+        btn.addEventListener("click", () => {
+            gateState.pinnedDishId = isPinned ? null : dish.id;
+            if (gateState.customer && gateState.customer.mood === "WAIT" && gateState.pinnedDishId) {
+                gateState.customer.dish = dish;
+                gateState.customer.message = `Cho tôi 1 phần ${dish.icon} ${dish.name} nhé!`;
+            }
+            renderRecipeModal();
+            notice(gateState.pinnedDishId
+                ? `Đã chọn "${dish.name}" làm món chủ đạo khách sẽ gọi!`
+                : "Đã bật chế độ khách gọi ngẫu nhiên cả 10 món trong Menu.");
+        });
+
+        card.append(top, btn);
+        wrap.appendChild(card);
+    });
+}
+
+/* ================= CANVAS VÀ BỐ CỤC ================= */
+const canvas = $("templeCanvas");
+const ctx = canvas.getContext("2d");
+if (!ctx) throw new Error("Trình duyệt không hỗ trợ Canvas 2D.");
+
+let W = 0, H = 0, DPR = 1;
+let area = {top:120,bottom:600,height:480};
+let seats = [], bots = [], fishes = [], chickens = [];
+let foods = [], chickenFoods = [], throws = [], ripples = [], texts = [];
+let nextTraffic = 0, nextChant = 0;
+let palmUntil = 0, palmStart = -100;
+let draftColor = state.color;
+let resizeFrame = 0;
+const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+function ellipse(x,y,rx,ry,color) {
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.ellipse(x,y,Math.max(.1,rx),Math.max(.1,ry),0,0,TAU);
+    ctx.fill();
+}
+function line(x1,y1,x2,y2,color,width=1) {
+    ctx.strokeStyle=color;
+    ctx.lineWidth=width;
+    ctx.beginPath();
+    ctx.moveTo(x1,y1);
+    ctx.lineTo(x2,y2);
+    ctx.stroke();
+}
+function roundBox(x,y,w,h,r,fill,stroke=null) {
+    r=Math.min(r,w/2,h/2);
+    ctx.beginPath();
+    ctx.moveTo(x+r,y);
+    ctx.lineTo(x+w-r,y);
+    ctx.quadraticCurveTo(x+w,y,x+w,y+r);
+    ctx.lineTo(x+w,y+h-r);
+    ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
+    ctx.lineTo(x+r,y+h);
+    ctx.quadraticCurveTo(x,y+h,x,y+h-r);
+    ctx.lineTo(x,y+r);
+    ctx.quadraticCurveTo(x,y,x+r,y);
+    ctx.closePath();
+    if(fill){ctx.fillStyle=fill;ctx.fill();}
+    if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=1;ctx.stroke();}
+}
+function label(text,x,y,size=12,color="#fef3c7") {
+    ctx.font=`600 ${size}px system-ui,sans-serif`;
+    ctx.textAlign="center";
+    ctx.textBaseline="middle";
+    ctx.fillStyle=color;
+    ctx.fillText(text,x,y);
+}
+function pond() {
+    return {
+        x:W*.42,
+        y:area.top+area.height*.53,
+        rx:W*.20,
+        ry:area.height*.21
+    };
+}
+function coop() {
+    return {
+        x:W*.82,
+        y:area.top+area.height*.52,
+        rx:Math.max(55,W*.12),
+        ry:Math.max(45,area.height*.18)
+    };
+}
+function worldPoint(nx,ny) {
+    return {x:W*nx,y:area.top+area.height*ny};
+}
+function playerSeat() {return seats[state.seatIndex];}
+function floatText(text,x,y,color="#fde68a") {
+    const seat=playerSeat();
+    texts.push({
+        text,
+        x:x ?? seat?.x ?? W/2,
+        y:y ?? ((seat?.y ?? H*.6)-60),
+        start:t,color
+    });
+    if(texts.length>50) texts.shift();
+}
+
+function resize() {
+    W=window.innerWidth;
+    H=window.innerHeight;
+    DPR=Math.min(window.devicePixelRatio||1,2);
+    canvas.width=Math.round(W*DPR);
+    canvas.height=Math.round(H*DPR);
+    ctx.setTransform(DPR,0,0,DPR,0,0);
+
+    const top=$("hud").getBoundingClientRect().bottom+12;
+    const bottom=$("controls").getBoundingClientRect().top-16;
+    area.top=top;
+    area.bottom=Math.max(top+100,bottom);
+    area.height=area.bottom-area.top;
+    buildWorld();
+}
+window.addEventListener("resize",()=>{
+    cancelAnimationFrame(resizeFrame);
+    resizeFrame=requestAnimationFrame(resize);
+});
+
+function randomTier() {
+    const r=Math.random();
+    return r<.30?0:r<.60?1:r<.82?2:r<.95?3:4;
+}
+function newBot(seat,walking=false) {
+    const bot={
+        isPlayer:false,
+        name:pick(BOT_NAMES),
+        color:Math.floor(Math.random()*COLORS.length),
+        tier:randomTier(),
+        phase:rand(0,TAU),
+        seat,
+        mode:"SIT",
+        x:seat.x,y:seat.y,
+        action:"",actionStart:-100,
+        chat:"",chatUntil:0,
+        nextAction:t+rand(2,8),
+        leaveAt:t+rand(15,42)
+    };
+    seat.bot=bot;
+    bots.push(bot);
+    if(walking) startWalk(bot,"ENTER");
+    return bot;
+}
+function buildWorld() {
+    seats=[];bots=[];foods=[];chickenFoods=[];throws=[];ripples=[];texts=[];
+    player.action="";
+    palmUntil=0;
+
+    if(state.zone==="GATE"){
+        if(!gateState.customer) spawnGateCustomer();
+        $("npcCount").textContent = 1;
+        return;
+    }
+
+    const mobile=W<650;
+    if(state.zone==="INDOOR" || state.zone==="CINEMA"){
+        const rows=mobile?4:5;
+        const cols=mobile?5:7;
+        for(let r=0;r<rows;r++){
+            for(let c=0;c<cols;c++){
+                seats.push({
+                    id:seats.length,
+                    x:W*(.14+c*.72/(cols-1)),
+                    y:area.top+area.height*(.45+r*.48/(rows-1)),
+                    scale:clamp(W/950,.52,1)*(.78+r*.06),
+                    bot:null
+                });
+            }
+        }
+    }else{
+        const p=pond();
+        const count=mobile?12:16;
+        for(let i=0;i<count;i++){
+            const angle=i/count*TAU;
+            seats.push({
+                id:seats.length,
+                angle,
+                x:p.x+Math.cos(angle)*W*.28,
+                y:p.y+Math.sin(angle)*area.height*.35,
+                scale:clamp(W/950,.55,.95),
+                bot:null
+            });
+        }
+        seats.sort((a,b)=>a.y-b.y);
+        seats.forEach((s,i)=>s.id=i);
+    }
+    state.seatIndex=clamp(
+        Math.floor(seats.length*.78),0,seats.length-1
+    );
+    seats.forEach(seat=>{
+        if(seat.id!==state.seatIndex&&Math.random()<.48) newBot(seat);
+    });
+    fishes=Array.from({length:12},()=>({
+        nx:rand(-.6,.6),ny:rand(-.6,.6),
+        angle:rand(0,TAU),phase:rand(0,TAU),
+        color:pick(["#ff844e","#f8f2da","#eeb83f","#ed5757"]),
+        size:rand(7,12)
+    }));
+    chickens=Array.from({length:7},(_,idx)=>({
+        nx:rand(-.55,.55),ny:rand(-.35,.65),
+        tx:rand(-.55,.55),ty:rand(-.35,.65),
+        dir:Math.random()<.5?1:-1,
+        phase:rand(0,TAU),
+        pecking:0,
+        wait:rand(.5,2.5),
+        color:idx===0?"#f59e0b":pick(["#fef08a","#fffbeb","#fcd34d","#f97316"]),
+        isRooster:idx===0,
+        size:idx===0?11:rand(7.5,9.5)
+    }));
+    nextTraffic=t+.7;
+    $("npcCount").textContent=bots.length;
+}
+
+/* ================= NPC: ĐƯỜNG ĐI VÀ HOẠT ĐỘNG ================= */
+function visitorPath(seat) {
+    if(state.zone==="INDOOR" || state.zone==="CINEMA"){
+        return [
+            worldPoint(.055,1.03),
+            {x:W*.07,y:seat.y},
+            {x:seat.x,y:seat.y}
+        ];
+    }
+    const p=pond();
+    let delta=seat.angle-Math.PI;
+    while(delta>Math.PI) delta-=TAU;
+    while(delta<-Math.PI) delta+=TAU;
+    const points=[{x:W*.015,y:p.y},{x:p.x-W*.33,y:p.y}];
+    const steps=Math.max(3,Math.ceil(Math.abs(delta)/.18));
+    for(let i=1;i<=steps;i++){
+        const angle=Math.PI+delta*i/steps;
+        points.push({
+            x:p.x+Math.cos(angle)*W*.33,
+            y:p.y+Math.sin(angle)*area.height*.41
+        });
+    }
+    points.push({x:seat.x,y:seat.y});
+    return points;
+}
+function startWalk(bot,mode) {
+    bot.mode=mode;
+    bot.action="";
+    bot.chat="";
+    const path=visitorPath(bot.seat);
+    if(mode==="LEAVE") path.reverse();
+    bot.path=path;
+    bot.pathIndex=1;
+    bot.x=path[0].x;
+    bot.y=path[0].y;
+    bot.speed=rand(55,85);
+    bot.walkStart=t;
+}
+function setAction(actor,action) {
+    actor.action=action;
+    actor.actionStart=t;
+}
+function throwFood(actor,x,y,kind="fish") {
+    throws.push({
+        sx:actor.x,sy:actor.y-26*(actor.seat?.scale||1),
+        tx:x,ty:y,start:t,duration:.75,kind
+    });
+    if(throws.length>40) throws.shift();
+}
+function randomPondPoint() {
+    const p=pond(),angle=rand(0,TAU),radius=Math.sqrt(Math.random())*.68;
+    return {
+        x:p.x+Math.cos(angle)*p.rx*radius,
+        y:p.y+Math.sin(angle)*p.ry*radius
+    };
+}
+function randomCoopPoint() {
+    const c=coop(),angle=rand(0,TAU),radius=Math.sqrt(Math.random())*.68;
+    return {
+        x:c.x+Math.cos(angle)*c.rx*radius,
+        y:c.y+Math.sin(angle)*c.ry*radius
+    };
+}
+function addFood(x,y) {
+    foods.push({x,y,until:t+7});
+    if(foods.length>70) foods.shift();
+    ripples.push({x,y,start:t});
+    if(ripples.length>40) ripples.shift();
+}
+function addChickenFood(x,y) {
+    for(let i=0;i<3;i++){
+        chickenFoods.push({
+            x:x+rand(-12,12),
+            y:y+rand(-8,8),
+            until:t+9
+        });
+    }
+    if(chickenFoods.length>90) chickenFoods.splice(0,3);
+}
+function updateBots(dt) {
+    if(state.zone==="GATE"){
+        if(!gateState.customer) spawnGateCustomer();
+        else if(gateState.customer.mood!=="WAIT" && t>=gateState.customer.leaveAt){
+            spawnGateCustomer();
+        }
+        $("npcCount").textContent = 1;
+        return;
+    }
+
+    for(let i=bots.length-1;i>=0;i--){
+        const bot=bots[i];
+        if(bot.mode!=="SIT"){
+            let remaining=bot.speed*dt;
+            while(remaining>0&&bot.pathIndex<bot.path.length){
+                const target=bot.path[bot.pathIndex];
+                const dx=target.x-bot.x,dy=target.y-bot.y;
+                const distance=Math.hypot(dx,dy);
+                bot.direction=dx>=0?1:-1;
+                if(distance<=remaining){
+                    bot.x=target.x;bot.y=target.y;
+                    remaining-=distance;
+                    bot.pathIndex++;
+                }else{
+                    bot.x+=dx/distance*remaining;
+                    bot.y+=dy/distance*remaining;
+                    remaining=0;
+                }
+            }
+            if(bot.pathIndex>=bot.path.length){
+                if(bot.mode==="LEAVE"){
+                    if(bot.seat.bot===bot) bot.seat.bot=null;
+                    bots.splice(i,1);
+                }else{
+                    bot.mode="SIT";
+                    bot.leaveAt=t+rand(18,45);
+                    bot.nextAction=t+rand(2,6);
+                }
+            }
+            continue;
+        }
+        if(t<bot.nextAction) continue;
+        bot.nextAction=t+rand(5,13);
+        const roll=Math.random();
+        if(roll<.25){
+            const chatPool = state.zone==="INDOOR"
+                ? INDOOR_CHATS
+                : state.zone==="OUTDOOR"
+                ? OUTDOOR_CHATS
+                : CINEMA_CHATS;
+            bot.chat=pick(chatPool);
+            bot.chatUntil=t+4;
+        }else if(state.zone==="INDOOR"){
+            setAction(bot,roll<.50?"bow":roll<.76?"beads":"chant");
+        }else if(state.zone==="CINEMA"){
+            setAction(bot,roll<.65?"clap":"dance");
+        }else{
+            if(Math.random()<.55){
+                const point=randomPondPoint();
+                setAction(bot,"feed");
+                throwFood(bot,point.x,point.y,"fish");
+            }else{
+                const point=randomCoopPoint();
+                setAction(bot,"feed");
+                throwFood(bot,point.x,point.y,"chicken");
+            }
+        }
+    }
+
+    if(t>=nextTraffic){
+        nextTraffic=t+rand(.9,1.8);
+        const moving=bots.filter(b=>b.mode!=="SIT").length;
+        if(moving<5){
+            const empty=seats.filter(s=>!s.bot&&s.id!==state.seatIndex);
+            const eligible=bots.filter(b=>b.mode==="SIT"&&t>=b.leaveAt);
+            const target=Math.min(seats.length-4,Math.floor(seats.length*.68));
+            if(empty.length>3&&bots.length<target&&
+               (Math.random()<.65||eligible.length===0)){
+                newBot(pick(empty),true);
+            }else if(eligible.length){
+                startWalk(pick(eligible),"LEAVE");
+            }
+        }
+    }
+    $("npcCount").textContent=bots.length;
+}
+
+/* ================= CÁ, GÀ, MỒI VÀ HIỆU ỨNG ================= */
+function updateEffects(dt) {
+    for(let i=throws.length-1;i>=0;i--){
+        const item=throws[i];
+        if(t-item.start>=item.duration){
+            if(item.kind==="chicken") addChickenFood(item.tx,item.ty);
+            else addFood(item.tx,item.ty);
+            throws.splice(i,1);
+        }
+    }
+    foods=foods.filter(f=>t<f.until);
+    chickenFoods=chickenFoods.filter(f=>t<f.until);
+    ripples=ripples.filter(r=>t-r.start<1.4);
+    texts=texts.filter(f=>t-f.start<1.7);
+
+    if(state.zone!=="OUTDOOR") return;
+
+    // Cập nhật cá Koi
+    const p=pond();
+    for(const fish of fishes){
+        let target=null,best=Infinity;
+        for(const food of foods){
+            const nx=(food.x-p.x)/p.rx;
+            const ny=(food.y-p.y)/p.ry;
+            const d=Math.hypot(nx-fish.nx,ny-fish.ny);
+            if(d<best){best=d;target={nx,ny,food};}
+        }
+        if(target){
+            const dx=target.nx-fish.nx,dy=target.ny-fish.ny;
+            const d=Math.max(.001,Math.hypot(dx,dy));
+            const step=Math.min(d,dt*.24);
+            fish.nx+=dx/d*step;
+            fish.ny+=dy/d*step;
+            fish.angle=Math.atan2(dy*p.ry,dx*p.rx);
+            if(d<.045) target.food.until=t;
+        }else{
+            const angle=t*.22+fish.phase;
+            const nx=Math.cos(angle)*.64;
+            const ny=Math.sin(angle)*.64;
+            const dx=nx-fish.nx,dy=ny-fish.ny;
+            fish.nx+=dx*dt*.55;
+            fish.ny+=dy*dt*.55;
+            fish.angle=Math.atan2(dy*p.ry,dx*p.rx);
+        }
+        const norm=Math.hypot(fish.nx,fish.ny);
+        if(norm>.82){fish.nx*=.82/norm;fish.ny*=.82/norm;}
+    }
+
+    // Cập nhật đàn gà trong chuồng
+    const c=coop();
+    for(const ch of chickens){
+        let target=null,best=Infinity;
+        for(const grain of chickenFoods){
+            const nx=(grain.x-c.x)/c.rx;
+            const ny=(grain.y-c.y)/c.ry;
+            const d=Math.hypot(nx-ch.nx,ny-ch.ny);
+            if(d<best){best=d;target={nx,ny,grain};}
+        }
+        if(target){
+            const dx=target.nx-ch.nx,dy=target.ny-ch.ny;
+            const d=Math.max(.001,Math.hypot(dx,dy));
+            if(dx!==0) ch.dir=dx>0?1:-1;
+            if(d<.06){
+                ch.pecking=t+.45;
+                target.grain.until=t;
+            }else{
+                const step=Math.min(d,dt*.42);
+                ch.nx+=dx/d*step;
+                ch.ny+=dy/d*step;
+            }
+        }else{
+            const dx=ch.tx-ch.nx,dy=ch.ty-ch.ny;
+            const d=Math.hypot(dx,dy);
+            if(d<.05){
+                ch.wait-=dt;
+                if(ch.wait<=0){
+                    const a=rand(0,TAU),r=Math.sqrt(Math.random())*.72;
+                    ch.tx=Math.cos(a)*r;
+                    ch.ty=Math.sin(a)*r;
+                    ch.wait=rand(1.2,3.5);
+                    if(Math.random()<.4) ch.pecking=t+.35;
+                }
+            }else{
+                if(dx!==0) ch.dir=dx>0?1:-1;
+                const step=Math.min(d,dt*.22);
+                ch.nx+=dx/d*step;
+                ch.ny+=dy/d*step;
+            }
+        }
+    }
+}
+
+/* ================= VẼ KHÔNG GIAN ================= */
+function drawBuddha() {
+    const x=W/2,y=area.top+area.height*.19;
+    const scale=clamp(Math.min(W/700,area.height/360),.45,1.2);
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    const glow=ctx.createRadialGradient(0,-10,8,0,-10,105);
+    glow.addColorStop(0,"rgba(255,222,90,.55)");
+    glow.addColorStop(1,"rgba(255,180,40,0)");
+    ellipse(0,-10,105,105,glow);
+    ctx.strokeStyle="#d8a737";
+    ctx.lineWidth=2;
+    ctx.beginPath();ctx.arc(0,-15,59,0,TAU);ctx.stroke();
+    for(let i=-2;i<=2;i++) ellipse(i*19,42,14,18,i%2?"#dc6295":"#f2a3c5");
+    roundBox(-54,52,108,13,4,"#855321","#d5a13c");
+    ellipse(0,29,42,14,"#dda92e");
+    ctx.fillStyle="#b77415";
+    ctx.beginPath();
+    ctx.moveTo(-24,-14);ctx.lineTo(24,-14);
+    ctx.lineTo(34,31);ctx.lineTo(-34,31);ctx.closePath();ctx.fill();
+    ctx.fillStyle="#9d3328";
+    ctx.beginPath();
+    ctx.moveTo(-23,-14);ctx.lineTo(10,-14);
+    ctx.lineTo(30,30);ctx.lineTo(-32,30);ctx.closePath();ctx.fill();
+    ellipse(-16,-32,4,11,"#e5b84d");
+    ellipse(16,-32,4,11,"#e5b84d");
+    ellipse(0,-35,16,19,"#f0c35c");
+    ellipse(0,-49,15,7,"#283140");
+    ellipse(0,-59,7,7,"#283140");
+    line(-10,-34,-3,-33,"#654016",1.5);
+    line(3,-33,10,-34,"#654016",1.5);
+    line(-3,-24,3,-24,"#9d5820",1);
+    ellipse(0,-40,1.6,1.6,"#fff4c5");
+    ellipse(0,21,16,5,"#efc457");
+    label("卍",0,0,14,"#f8df8b");
+    roundBox(-16,67,32,14,4,"#81541b","#e8b842");
+    for(let i=-1;i<=1;i++){
+        ctx.strokeStyle="rgba(230,220,190,.35)";
+        ctx.beginPath();
+        ctx.moveTo(i*6,67);
+        ctx.quadraticCurveTo(i*6+Math.sin(t+i)*8,47,i*6,33);
+        ctx.stroke();
+    }
+    label("VẠN CỔ AN LẠC",0,-85,16,"#f9dd91");
+    ctx.restore();
+}
+function drawIndoor() {
+    const grad=ctx.createLinearGradient(0,0,0,H);
+    grad.addColorStop(0,"#281006");
+    grad.addColorStop(1,"#130906");
+    ctx.fillStyle=grad;ctx.fillRect(0,0,W,H);
+    ctx.fillStyle="#4b2215";
+    ctx.fillRect(W*.035,area.top,16,area.height);
+    ctx.fillRect(W*.965-16,area.top,16,area.height);
+    for(let i=0;i<8;i++){
+        const y=area.top+area.height*(.35+i*.09);
+        line(W*.08,y,W*.92,y,"#75442444");
+    }
+    for(let i=0;i<=8;i++){
+        line(W/2,area.top+area.height*.31,W*i/8,area.bottom,"#75442433");
+    }
+    drawBuddha();
+}
+function drawCinemaRoom() {
+    const grad=ctx.createLinearGradient(0,0,0,H);
+    grad.addColorStop(0,"#090714");
+    grad.addColorStop(1,"#1c0b19");
+    ctx.fillStyle=grad;ctx.fillRect(0,0,W,H);
+
+    // Rèm đỏ hai bên rạp chiếu phim
+    ctx.fillStyle="#58131d";
+    ctx.fillRect(W*.02,area.top,24,area.height);
+    ctx.fillRect(W*.98-24,area.top,24,area.height);
+
+    // Ánh sáng từ màn hình chiếu xuống khán phòng
+    const glow=ctx.createRadialGradient(W/2,area.top+60,10,W/2,area.top+180,W*.45);
+    glow.addColorStop(0,"rgba(147,197,253,.22)");
+    glow.addColorStop(1,"rgba(147,197,253,0)");
+    ellipse(W/2,area.top+160,W*.45,area.height*.35,glow);
+
+    for(let i=0;i<8;i++){
+        const y=area.top+area.height*(.38+i*.085);
+        line(W*.08,y,W*.92,y,"#ffffff14");
+    }
+    if(!state.screenVisible){
+        roundBox(W/2-150,area.top+25,300,110,10,"#111","#d8a737");
+        label("MÀN HÌNH ĐANG TẮT",W/2,area.top+80,15,"#fde68a");
+    }
+}
+function drawChickenCoop() {
+    const c=coop();
+    ellipse(c.x,c.y,c.rx+8,c.ry+6,"#6b4f2a");
+    ellipse(c.x,c.y,c.rx,c.ry,"#8c6d3b");
+
+    for(let i=0;i<12;i++){
+        const a=i/12*TAU;
+        if(a>1.2 && a<1.9) continue;
+        const px=c.x+Math.cos(a)*(c.rx+3);
+        const py=c.y+Math.sin(a)*(c.ry+3);
+        roundBox(px-3,py-14,6,16,2,"#a47541","#4d3319");
+    }
+
+    const houseX=c.x, houseY=c.y-c.ry*.78;
+    roundBox(houseX-38,houseY-10,76,34,4,"#7c4d25","#3e2410");
+    roundBox(houseX-12,houseY+4,24,20,6,"#2b180a");
+    ctx.fillStyle="#d4a338";
+    ctx.beginPath();
+    ctx.moveTo(houseX-48,houseY-6);
+    ctx.lineTo(houseX,houseY-34);
+    ctx.lineTo(houseX+48,houseY-6);
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle="#85581A";
+    ctx.stroke();
+    label("🏡 Chuồng Gà",houseX,houseY-42,11,"#fde68a");
+
+    for(const grain of chickenFoods){
+        ellipse(grain.x,grain.y,2.3,1.6,"#facc15");
+    }
+
+    for(const ch of chickens){
+        const x=c.x+ch.nx*c.rx;
+        const y=c.y+ch.ny*c.ry;
+        const s=ch.size*clamp(W/850,.7,1);
+        const isPecking=t<ch.pecking;
+        const walkBob=Math.sin(t*12+ch.phase)*1.5;
+
+        ctx.save();
+        ctx.translate(x,y);
+        ctx.scale(ch.dir,1);
+
+        line(-2,0,-3,5,"#f59e0b",1.5);
+        line(2,0,3,5,"#f59e0b",1.5);
+        ellipse(0,-s*.45+walkBob,s*.85,s*.62,ch.color);
+        ctx.fillStyle=ch.isRooster?"#b45309":ch.color;
+        ctx.beginPath();
+        ctx.moveTo(-s*.6,-s*.5);
+        ctx.lineTo(-s*1.25,-s*1.05);
+        ctx.lineTo(-s*.95,-s*.25);
+        ctx.closePath();
+        ctx.fill();
+
+        const hx=isPecking?s*.75:s*.55;
+        const hy=isPecking?0:(-s*.95+walkBob);
+        ellipse(hx,hy,s*.45,s*.42,ch.color);
+        ellipse(hx,hy-s*.45,s*.22,s*.15,"#ef4444");
+        ctx.fillStyle="#f97316";
+        ctx.beginPath();
+        ctx.moveTo(hx+s*.35,hy-2);
+        ctx.lineTo(hx+s*.75,hy+(isPecking?3:0));
+        ctx.lineTo(hx+s*.35,hy+2);
+        ctx.closePath();
+        ctx.fill();
+        ellipse(hx+s*.15,hy-1,1.2,1.2,"#111");
+
+        ctx.restore();
+    }
+}
+function drawOutdoor() {
+    const grad=ctx.createLinearGradient(0,0,0,H);
+    grad.addColorStop(0,"#133c34");
+    grad.addColorStop(1,"#0b291d");
+    ctx.fillStyle=grad;ctx.fillRect(0,0,W,H);
+    const p=pond();
+
+    ctx.strokeStyle="#a99c7250";
+    ctx.lineWidth=18;
+    ctx.beginPath();
+    ctx.ellipse(p.x,p.y,W*.33,area.height*.41,0,0,TAU);
+    ctx.stroke();
+
+    const rockY=area.top+area.height*.10;
+    ctx.fillStyle="#5c6866";
+    ctx.beginPath();
+    ctx.moveTo(p.x-50,rockY+25);
+    ctx.lineTo(p.x-15,rockY-17);
+    ctx.lineTo(p.x+8,rockY+4);
+    ctx.lineTo(p.x+27,rockY-25);
+    ctx.lineTo(p.x+55,rockY+25);
+    ctx.closePath();ctx.fill();
+
+    ellipse(p.x,p.y,p.rx+10,p.ry+9,"#776e59");
+    const water=ctx.createRadialGradient(p.x,p.y,2,p.x,p.y,p.rx);
+    water.addColorStop(0,"#278f89");
+    water.addColorStop(1,"#104f4d");
+    ellipse(p.x,p.y,p.rx,p.ry,water);
+
+    ctx.save();
+    ctx.beginPath();ctx.ellipse(p.x,p.y,p.rx,p.ry,0,0,TAU);ctx.clip();
+    for(let i=0;i<3;i++){
+        const r=((t*.13+i/3)%1);
+        ctx.strokeStyle="rgba(190,244,237,.13)";
+        ctx.lineWidth=1;
+        ctx.beginPath();
+        ctx.ellipse(p.x,p.y,p.rx*r,p.ry*r,0,0,TAU);
+        ctx.stroke();
+    }
+    for(const fish of fishes){
+        const x=p.x+fish.nx*p.rx,y=p.y+fish.ny*p.ry;
+        const size=fish.size*clamp(W/850,.65,1);
+        ctx.save();ctx.translate(x,y);ctx.rotate(fish.angle);
+        const wag=Math.sin(t*9+fish.phase)*size*.25;
+        ctx.fillStyle=fish.color;
+        ctx.beginPath();
+        ctx.moveTo(-size*.6,0);
+        ctx.lineTo(-size*1.7,-size*.65+wag);
+        ctx.lineTo(-size*1.4,0);
+        ctx.lineTo(-size*1.7,size*.65+wag);
+        ctx.closePath();ctx.fill();
+        ellipse(0,0,size,size*.42,fish.color);
+        ellipse(-size*.2,0,size*.3,size*.32,"#b13d2c");
+        ellipse(size*.6,-size*.15,1.1,1.1,"#111");
+        ctx.restore();
+    }
+    for(const food of foods) ellipse(food.x,food.y,2.8,2.8,"#fde68a");
+    for(const ripple of ripples){
+        const age=t-ripple.start;
+        ctx.strokeStyle=`rgba(255,248,200,${1-age/1.4})`;
+        ctx.beginPath();
+        ctx.ellipse(ripple.x,ripple.y,4+age*26,2+age*15,0,0,TAU);
+        ctx.stroke();
+    }
+    for(let i=-1;i<=1;i++){
+        const lx=p.x+i*p.rx*.42;
+        const ly=p.y+(i===0?1:-1)*p.ry*.28;
+        ellipse(lx,ly,18,11,"#2f834e");
+        ellipse(lx+2,ly-3,6,5,"#f59bc9");
+    }
+    ctx.restore();
+
+    drawChickenCoop();
+}
+
+/* ================= VẼ GÓC NHÌN THỨ NHẤT: QUẦY BẾP CHAY CỔNG CHÙA ================= */
+function drawGateKitchen() {
+    gateState.hitboxes = [];
+
+    // 1. Bầu trời và Cổng Tam Quan phía xa
+    const sky = ctx.createLinearGradient(0, 0, 0, H);
+    sky.addColorStop(0, "#17253b");
+    sky.addColorStop(0.52, "#2d4a43");
+    sky.addColorStop(1, "#1e120a");
+    ctx.fillStyle = sky;
+    ctx.fillRect(0, 0, W, H);
+
+    const counterY = area.top + area.height * 0.46;
+
+    // Cổng Tam Quan Chùa An Lạc
+    const gateW = Math.min(460, W * 0.84);
+    const gateX = W / 2;
+    const gateTop = area.top + 8;
+
+    // Hai trụ cổng đỏ và mái cong
+    ctx.fillStyle = "#5c1d18";
+    ctx.fillRect(gateX - gateW * 0.42, gateTop + 26, 22, counterY - gateTop - 20);
+    ctx.fillRect(gateX + gateW * 0.42 - 22, gateTop + 26, 22, counterY - gateTop - 20);
+    ctx.fillStyle = "#854d0e";
+    ctx.beginPath();
+    ctx.moveTo(gateX - gateW * 0.52, gateTop + 32);
+    ctx.lineTo(gateX, gateTop - 4);
+    ctx.lineTo(gateX + gateW * 0.52, gateTop + 32);
+    ctx.closePath();
+    ctx.fill();
+    roundBox(gateX - 115, gateTop + 10, 230, 24, 6, "#3b180c", "#fbbf24");
+    label("⛩️ CỔNG TAM QUAN — BẾP CHAY", gateX, gateTop + 22, 11.5, "#fde68a");
+
+    // Đèn lồng treo hai bên quầy
+    for (const side of [-1, 1]) {
+        const lx = gateX + side * (gateW * 0.36);
+        const ly = gateTop + 48 + Math.sin(t * 2 + side) * 2;
+        line(lx, gateTop + 28, lx, ly - 10, "#fbbf24", 1.5);
+        ellipse(lx, ly, 12, 15, "#dc2626");
+        ellipse(lx, ly, 6, 13, "#f87171");
+    }
+
+    // 2. Vẽ Khách hàng đứng trước quầy (Góc nhìn trực diện)
+    const cust = gateState.customer;
+    if (cust) {
+        const enterProgress = clamp((t - cust.arrivalTime) / 0.45, 0, 1);
+        const custX = W / 2 + (1 - enterProgress) * 90;
+        const custY = counterY + 12;
+        const custScale = clamp(Math.min(W / 650, area.height / 420), 0.78, 1.25);
+
+        // Vẽ nhân vật khách hàng đứng trước mặt người chơi
+        drawActor(
+            {
+                isPlayer: false,
+                name: cust.name,
+                color: cust.color,
+                tier: cust.tier,
+                action: cust.mood === "HAPPY" ? "clap" : "",
+                actionStart: cust.mood === "HAPPY" ? t - 0.5 : -100,
+                walkStart: 0
+            },
+            custX,
+            custY,
+            custScale * 1.35,
+            false
+        );
+
+        // Khung gọi món lớn rõ ràng kèm gợi ý công thức
+        const bubbleW = Math.min(470, W - 24);
+        const bubbleH = 66;
+        const bx = W / 2 - bubbleW / 2;
+        const by = Math.max(area.top + 38, custY - 148 * custScale);
+
+        const borderCol = cust.mood === "HAPPY" ? "#34d399" : cust.mood === "SAD" ? "#f87171" : "#fbbf24";
+        roundBox(bx, by, bubbleW, bubbleH, 12, "rgba(18, 12, 8, 0.94)", borderCol);
+        label(cust.message, W / 2, by + 21, 13, "#fef3c7");
+        const recipeText = "Công thức chuẩn: " + formatRecipeIcons(cust.dish.recipe);
+        label(recipeText, W / 2, by + 45, 11.5, "#6ee7b7");
+    }
+
+    // 3. Mặt bàn bếp gỗ (Góc nhìn thứ nhất của Đầu Bếp)
+    const deskGrad = ctx.createLinearGradient(0, counterY, 0, area.bottom);
+    deskGrad.addColorStop(0, "#5c3419");
+    deskGrad.addColorStop(0.12, "#472611");
+    deskGrad.addColorStop(1, "#261307");
+    roundBox(8, counterY, W - 16, area.bottom - counterY + 8, 14, deskGrad, "#b47b38");
+    line(14, counterY + 6, W - 14, counterY + 6, "#d99b4e66", 2);
+
+    // Thống kê góc trái bàn bếp & Nút mở nhanh Menu 10 món
+    roundBox(18, counterY + 10, 175, 28, 8, "rgba(0,0,0,0.55)", "#fbbf2466");
+    label(`🍱 Đã phục vụ: ${gateState.servedCount} phần (+${gateState.servedCount * 100}✨)`, 105, counterY + 24, 11, "#fde68a");
+
+    const menuBtnW = 155, menuBtnH = 28;
+    const menuBtnX = W - menuBtnW - 18, menuBtnY = counterY + 10;
+    roundBox(menuBtnX, menuBtnY, menuBtnW, menuBtnH, 8, "#422060", "#c084fc");
+    label("📖 Sổ Công Thức 10 Món", menuBtnX + menuBtnW / 2, menuBtnY + 14, 11, "#f3e8ff");
+    gateState.hitboxes.push({
+        x: menuBtnX, y: menuBtnY, w: menuBtnW, h: menuBtnH,
+        onClick: () => { renderRecipeModal(); openModal("recipeModal"); }
+    });
+
+    // 4. Tô/Mâm chế biến ở chính giữa bàn & 2 bàn tay góc nhìn thứ nhất
+    const bowlX = W / 2;
+    const bowlY = counterY + (area.bottom - counterY) * 0.25;
+    const bowlRx = clamp(W * 0.13, 62, 105);
+    const bowlRy = clamp(area.height * 0.065, 22, 34);
+
+    // Hai bàn tay người chơi ở góc nhìn thứ nhất (nhún nhẹ khi bỏ nguyên liệu)
+    const handOffset = t < gateState.handBounce ? Math.sin((gateState.handBounce - t) * 25) * 8 : 0;
+    ellipse(bowlX - bowlRx - 26, bowlY + 10 - handOffset, 18, 12, "#efc996");
+    ellipse(bowlX + bowlRx + 26, bowlY + 10 - handOffset, 18, 12, "#efc996");
+
+    // Vẽ Mâm & Tô Sứ
+    ellipse(bowlX, bowlY + 5, bowlRx + 12, bowlRy + 7, "#2b1608");
+    ellipse(bowlX, bowlY, bowlRx, bowlRy, "#f5f5f4");
+    ellipse(bowlX, bowlY + 2, bowlRx - 8, bowlRy - 5, "#e7e5e4");
+
+    if (gateState.bowl.length === 0) {
+        label("Tô đang trống (Chọn nguyên liệu bên dưới)", bowlX, bowlY, 10.5, "#78716c");
+    } else {
+        const itemsText = gateState.bowl.map(id => ING_MAP[id].icon + " " + ING_MAP[id].name).join(" · ");
+        label(itemsText, bowlX, bowlY, 11.5, "#1c1917");
+    }
+
+    // Nút Chuông Giao Món & Làm Lại ngay cạnh Tô
+    const serveX = bowlX + bowlRx + 55;
+    const serveY = bowlY - 16;
+    if (serveX + 95 < W - 12) {
+        roundBox(serveX, serveY, 96, 32, 10, "#104d3b", "#34d399");
+        label("🛎️ Giao Món", serveX + 48, serveY + 16, 11.5, "#a7f3d0");
+        gateState.hitboxes.push({
+            x: serveX, y: serveY, w: 96, h: 32,
+            onClick: serveCurrentDish
+        });
+    }
+    const clearX = bowlX - bowlRx - 145;
+    if (clearX > 12) {
+        roundBox(clearX, serveY, 90, 32, 10, "#451a1a", "#fca5a5");
+        label("🗑️ Đổ Tô", clearX + 45, serveY + 16, 11.5, "#fecaca");
+        gateState.hitboxes.push({
+            x: clearX, y: serveY, w: 90, h: 32,
+            onClick: () => { gateState.bowl = []; sound("mo"); }
+        });
+    }
+
+    // 5. Khay 12 Nguyên liệu Chay xếp 2 hàng trên mặt bàn
+    const gridTop = counterY + (area.bottom - counterY) * 0.45;
+    const gridBottom = area.bottom - 8;
+    const gridH = Math.max(70, gridBottom - gridTop);
+    const cols = 6, rows = 2;
+    const padX = Math.max(14, W * 0.04);
+    const availW = W - padX * 2;
+    const cellW = availW / cols;
+    const cellH = gridH / rows;
+
+    INGREDIENTS.forEach((ing, idx) => {
+        const r = Math.floor(idx / cols);
+        const c = idx % cols;
+        const cx = padX + c * cellW + 4;
+        const cy = gridTop + r * cellH + 3;
+        const cw = cellW - 8;
+        const ch = cellH - 6;
+
+        const isNeeded = cust && cust.mood === "WAIT" && cust.dish.recipe.includes(ing.id);
+        const inBowlCount = gateState.bowl.filter(x => x === ing.id).length;
+
+        roundBox(
+            cx, cy, cw, ch, 10,
+            inBowlCount > 0 ? "#3f2e18" : "#2b190d",
+            isNeeded ? "#fbbf24" : "rgba(251,191,36,0.28)"
+        );
+        label(ing.icon, cx + cw / 2, cy + ch * 0.36, Math.min(20, ch * 0.42));
+        label(ing.name, cx + cw / 2, cy + ch * 0.76, Math.min(11, cw * 0.14), "#fef3c7");
+
+        if (inBowlCount > 0) {
+            roundBox(cx + cw - 20, cy + 3, 17, 15, 5, "#104d3b", "#34d399");
+            label(`x${inBowlCount}`, cx + cw - 11.5, cy + 10.5, 9.5, "#a7f3d0");
+        }
+
+        gateState.hitboxes.push({
+            x: cx, y: cy, w: cw, h: ch,
+            onClick: () => addIngredientToBowl(ing.id)
+        });
+    });
+}
+
+/* ================= VẼ NHÂN VẬT & HIỆU ỨNG ================= */
+function drawAura(tier,walking) {
+    if(tier<=0) return;
+    const y=walking?-31:-21;
+    const rgb=TITLE_RGB[tier];
+    const pulse=reducedMotion?1:1+Math.sin(t*3)*.06;
+    if(tier>=2){
+        const grad=ctx.createRadialGradient(0,y,3,0,y,38*pulse);
+        grad.addColorStop(0,`rgba(${rgb},.34)`);
+        grad.addColorStop(1,`rgba(${rgb},0)`);
+        ellipse(0,y,38*pulse,38*pulse,grad);
+    }
+    ctx.strokeStyle=`rgba(${rgb},${.45+tier*.1})`;
+    ctx.lineWidth=1.5;
+    ctx.beginPath();
+    ctx.arc(0,y,(24+tier*3)*pulse,0,TAU);
+    ctx.stroke();
+    if(tier===4){
+        for(let i=0;i<8;i++){
+            const a=t*.9+i*TAU/8;
+            ellipse(Math.cos(a)*34,y+Math.sin(a)*34,2.4,2.4,"#fde68a");
+        }
+    }
+}
+
+function drawActor(actor,x,y,scale,walking=false) {
+    const color=COLORS[actor.color]||COLORS[0];
+    const age=t-actor.actionStart;
+    const bow=actor.action==="bow"&&age>=0&&age<1.7
+        ? Math.sin(age/1.7*Math.PI) : 0;
+    const mo=actor.action==="mo"&&age>=0&&age<.38
+        ? Math.sin(age/.38*Math.PI) : 0;
+    const bead=actor.action==="beads"&&age>=0&&age<1.2;
+    const feed=actor.action==="feed"&&age>=0&&age<.9;
+    const clap=actor.action==="clap"&&age>=0&&age<2.2;
+    const dance=actor.action==="dance"&&age>=0&&age<4.0;
+    const danceShiftX=dance?Math.sin(age*10)*6:0;
+    const danceBob=dance?Math.abs(Math.cos(age*10))*9:0;
+    const step=walking?Math.sin((t-actor.walkStart)*9)*5:0;
+    const bob=walking?Math.abs(Math.cos((t-actor.walkStart)*9))*2:0;
+    const headY=(walking?-53:-39)+bow*24-bob-danceBob;
+    const top=(walking?-42:-27)+bow*12-bob-danceBob;
+
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(scale,scale);
+    ellipse(0,2,23,8,"rgba(0,0,0,.35)");
+    drawAura(actor.tier||0,walking);
+
+    if(walking){
+        line(-5,-14,-6+step,2,"#2a190d",5);
+        line(5,-14,6-step,2,"#2a190d",5);
+    }else{
+        ellipse(0,-4,21,8,color.robe);
+    }
+
+    ctx.fillStyle=color.body;
+    ctx.beginPath();
+    ctx.moveTo(-14+danceShiftX,top);
+    ctx.lineTo(14+danceShiftX,top);
+    ctx.lineTo(19,walking?-11:0);
+    ctx.lineTo(-19,walking?-11:0);
+    ctx.closePath();ctx.fill();
+
+    ctx.fillStyle=color.robe;
+    ctx.beginPath();
+    ctx.moveTo(-12+danceShiftX,top);
+    ctx.lineTo(5+danceShiftX,top);
+    ctx.lineTo(16,walking?-11:0);
+    ctx.lineTo(-16,walking?-11:0);
+    ctx.closePath();ctx.fill();
+
+    if(walking){
+        const dir=actor.direction||1;
+        ellipse(-13*dir,-26+step*.4,4,8,color.body);
+        ellipse(13*dir,-26-step*.4,4,8,color.robe);
+    }else if(bow>.1){
+        ellipse(-9,-8+bow*5,4.5,3,"#efc996");
+        ellipse(9,-8+bow*5,4.5,3,"#efc996");
+    }else if(clap){
+        const clapGap=Math.abs(Math.sin(age*22))*7;
+        ellipse(-2-clapGap,-13,4.5,3.5,"#efc996");
+        ellipse(2+clapGap,-13,4.5,3.5,"#efc996");
+        if(clapGap<1.5) label("👏",0,headY-18,14,"#fde68a");
+    }else if(dance){
+        ellipse(-14+danceShiftX,-18+Math.sin(age*12)*8,4,3.5,"#efc996");
+        ellipse(14+danceShiftX,-18+Math.cos(age*12)*8,4,3.5,"#efc996");
+        label("🎵",-18,headY-14-(age%1)*10,14,"#6ee7b7");
+    }else{
+        const handMove=bead?Math.sin(age*18)*2:0;
+        ellipse(-4+handMove,-8,4,3,"#efc996");
+        ellipse(feed?20:4,-8-(feed?Math.sin(age*Math.PI)*13:0),4,3,"#efc996");
+    }
+
+    if(!walking&&state.zone==="INDOOR"){
+        ellipse(19,2,6.5,4.5,"#8c5425");
+        line(15,2,23,2,"#3b1f0b",1.2);
+        if(mo>0){
+            line(6,-10,19,-5+mo*7,"#d6a253",2);
+            ctx.strokeStyle=`rgba(255,230,130,${1-mo})`;
+            ctx.beginPath();
+            ctx.arc(19,1,6+mo*12,0,TAU);
+            ctx.stroke();
+        }
+    }
+    if(bead){
+        ctx.strokeStyle="#d29b42";
+        ctx.lineWidth=1.5;
+        ctx.beginPath();
+        ctx.arc(0,-8,5.5,0,TAU);
+        ctx.stroke();
+    }
+
+    ellipse(danceShiftX,headY,11,12,"#efc996");
+    ellipse(-3+danceShiftX,headY-4,4,2.5,"rgba(255,255,255,.22)");
+    line(-5+danceShiftX,headY,-2+danceShiftX,headY,"#4e321a",1.3);
+    line(2+danceShiftX,headY,5+danceShiftX,headY,"#4e321a",1.3);
+    line(-2.5+danceShiftX,headY+4,2.5+danceShiftX,headY+4,"#7b4927",1.1);
+
+    const title=(actor.isPlayer?PLAYER_TITLES:NPC_TITLES)[actor.tier||0];
+    roundBox(-66,headY-35,132,15,6,"rgba(0,0,0,.62)");
+    label(title,0,headY-27.5,9.5,TITLE_COLORS[actor.tier||0]);
+    roundBox(-58,headY-19,116,15,6,"rgba(0,0,0,.72)");
+    label(actor.name,0,headY-11.5,10.5,actor.isPlayer?"#fde68a":"#fff");
+
+    if(actor.chat&&t<actor.chatUntil){
+        ctx.font="600 11px system-ui,sans-serif";
+        const width=clamp(ctx.measureText(actor.chat).width+18,64,230);
+        roundBox(-width/2,headY-58,width,20,8,"rgba(255,250,232,.95)","#b7791f");
+        label(actor.chat,0,headY-48,10.5,"#24160c");
+    }
+    ctx.restore();
+}
+
+function drawSeat(seat) {
+    ctx.save();
+    ctx.translate(seat.x,seat.y);
+    ctx.scale(seat.scale,seat.scale);
+    const fill = state.zone==="CINEMA"
+        ? (seat.id===state.seatIndex?"#e11d48":"#881337")
+        : (seat.id===state.seatIndex?"#d99726":"#7d4f22");
+    ellipse(0,4,26,9,"rgba(0,0,0,.35)");
+    ellipse(0,0,25,8.5,fill);
+    ellipse(0,-1,20,6,"#b77d3b");
+    ctx.restore();
+}
+function drawPalm() {
+    if(t>=palmUntil) return;
+    const progress=clamp((t-palmStart)/.42,0,1);
+    const y=-120+progress*(area.top+area.height*.52);
+    ctx.save();
+    ctx.translate(W/2,y);
+    const glow=ctx.createRadialGradient(0,0,10,0,0,150);
+    glow.addColorStop(0,"rgba(255,215,70,.75)");
+    glow.addColorStop(1,"rgba(255,150,20,0)");
+    ellipse(0,0,150,150,glow);
+    roundBox(-36,-25,72,78,24,"#f5c542","#9a5812");
+    for(let i=-2;i<=2;i++){
+        roundBox(i*14-6,-68+Math.abs(i)*5,12,48,6,"#f5c542","#9a5812");
+    }
+    label("卍",0,14,32,"#7c2d12");
+    ctx.restore();
+    label("NHƯ LAI THẦN CHƯỞNG!",W/2,area.top+36,22,"#fde68a");
+}
+function drawOverlays() {
+    for(const item of throws){
+        const p=clamp((t-item.start)/item.duration,0,1);
+        const x=item.sx+(item.tx-item.sx)*p;
+        const y=item.sy+(item.ty-item.sy)*p-Math.sin(p*Math.PI)*48;
+        ellipse(x,y,3.2,3.2,item.kind==="chicken"?"#facc15":"#fde68a");
+    }
+    for(const item of texts){
+        const age=t-item.start;
+        ctx.save();
+        ctx.globalAlpha=clamp(1-age/1.7,0,1);
+        label(item.text,item.x,item.y-age*28,13,item.color);
+        ctx.restore();
+    }
+    drawPalm();
+}
+function draw() {
+    ctx.clearRect(0,0,W,H);
+    ctx.save();
+
+    if(state.zone==="GATE"){
+        drawGateKitchen();
+        drawOverlays();
+        ctx.restore();
+        return;
+    }
+
+    if(state.zone==="CINEMA" && state.firstPerson){
+        const ps=playerSeat()||{x:W/2,y:H*.7};
+        ctx.translate(W/2,H*.82);
+        ctx.scale(2.15,2.15);
+        ctx.translate(-ps.x,-ps.y);
+    }
+
+    if(state.zone==="INDOOR") drawIndoor();
+    else if(state.zone==="CINEMA") drawCinemaRoom();
+    else drawOutdoor();
+
+    const list=[];
+    for(const seat of seats){
+        list.push({y:seat.y-1,draw:()=>drawSeat(seat)});
+        if(seat.id===state.seatIndex&&state.meditating){
+            list.push({
+                y:seat.y,
+                draw:()=>drawActor(player,seat.x,seat.y,seat.scale,false)
+            });
+        }else if(seat.bot&&seat.bot.mode==="SIT"){
+            const bot=seat.bot;
+            list.push({
+                y:seat.y,
+                draw:()=>drawActor(bot,seat.x,seat.y,seat.scale,false)
+            });
+        }
+    }
+    for(const bot of bots){
+        if(bot.mode!=="SIT"){
+            const scale=clamp(
+                .58+(bot.y-area.top)/area.height*.35,.5,1
+            );
+            list.push({
+                y:bot.y,
+                draw:()=>drawActor(bot,bot.x,bot.y,scale,true)
+            });
+        }
+    }
+    list.sort((a,b)=>a.y-b.y);
+    for(const item of list) item.draw();
+    drawOverlays();
+    ctx.restore();
+}
+
+/* ================= TƯƠNG TÁC NGƯỜI CHƠI ================= */
+function requireMeditation() {
+    if(state.meditating) return true;
+    notice("Bạn đang Xả Thiền. Hãy bấm Nhập Thiền hoặc chọn một chiếu trống.");
+    return false;
+}
+function feedAt(x,y) {
+    const p=pond();
+    const nx=(x-p.x)/p.rx,ny=(y-p.y)/p.ry;
+    const point=Math.hypot(nx,ny)<=.88?{x,y}:randomPondPoint();
+    const seat=playerSeat()||{x:W/2,y:H*.75,scale:1};
+    setAction(player,"feed");
+    throwFood({x:seat.x,y:seat.y,seat},point.x,point.y,"fish");
+    const gained=addMerit(3);
+    sound("bead");
+    floatText(gained>0?`+${gained} Phóng Sinh 🐠`:"Đã đạt giới hạn",point.x,point.y);
+}
+function feedChickenAt(x,y) {
+    const c=coop();
+    const nx=(x-c.x)/c.rx,ny=(y-c.y)/c.ry;
+    const point=Math.hypot(nx,ny)<=.92?{x,y}:randomCoopPoint();
+    const seat=playerSeat()||{x:W/2,y:H*.75,scale:1};
+    setAction(player,"feed");
+    throwFood({x:seat.x,y:seat.y,seat},point.x,point.y,"chicken");
+    const gained=addMerit(3);
+    sound("bead");
+    floatText(gained>0?`+${gained} Cho Gà Ăn 🐔`:"Đã đạt giới hạn",point.x,point.y,"#facc15");
+}
+function switchZone(targetZone) {
+    state.zone = targetZone;
+    state.chanting = false;
+    state.meditating = true;
+    syncUI();
+    buildWorld();
+    if(targetZone==="INDOOR") notice("Đã vào Chánh Điện.");
+    else if(targetZone==="OUTDOOR") notice("Đã ra Sân Chùa. Nhấp vào Hồ Koi hoặc Chuồng Gà để rải thức ăn!");
+    else if(targetZone==="CINEMA"){
+        if(state.screenVisible) loadYouTubeAPI();
+        notice("🎬 Đã vào Rạp Chiếu Phim! Bạn có thể thêm link YouTube/MP4, Skip, Vỗ tay & Nhảy múa.");
+    }else if(targetZone==="GATE"){
+        spawnGateCustomer();
+        notice("⛩️ Đã ra Cổng Chùa (Góc nhìn thứ nhất)! Hãy chọn nguyên liệu trên bàn để nấu đúng món chay khách gọi (+100 Công Đức/món).");
+    }
+}
+
+$("switchZoneBtn").addEventListener("click",()=>{
+    switchZone(state.zone==="OUTDOOR"?"INDOOR":"OUTDOOR");
+});
+$("cinemaZoneBtn").addEventListener("click",()=>{
+    switchZone(state.zone==="CINEMA"?"INDOOR":"CINEMA");
+});
+$("gateZoneBtn").addEventListener("click",()=>{
+    switchZone(state.zone==="GATE"?"INDOOR":"GATE");
+});
+$("menuBookBtn").addEventListener("click",()=>{
+    renderRecipeModal();
+    openModal("recipeModal");
+});
+$("serveDishBtn").addEventListener("click", serveCurrentDish);
+$("clearDishBtn").addEventListener("click",()=>{
+    gateState.bowl = [];
+    sound("mo");
+    notice("Đã đổ tô để làm lại món mới.");
+});
+$("nextCustBtn").addEventListener("click",()=>{
+    spawnGateCustomer();
+    sound("bead");
+    notice("Đã mời vị khách tiếp theo vào quầy!");
+});
+$("audioBtn").addEventListener("click",()=>{
+    state.muted=!state.muted;
+    syncUI();
+    notice(state.muted?"Đã tắt âm thanh.":"Đã bật âm thanh.");
+});
+$("moBtn").addEventListener("click",()=>{
+    if(!requireMeditation()) return;
+    setAction(player,"mo");
+    const gained=addMerit(1);
+    sound("mo");
+    floatText(gained>0?"+1 Công Đức 🐟":"Đã đạt giới hạn");
+});
+$("beadsBtn").addEventListener("click",()=>{
+    if(!requireMeditation()) return;
+    setAction(player,"beads");
+    const gained=addMerit(2);
+    sound("bead");
+    floatText(gained>0?"+2 Tịnh Tâm 📿":"Đã đạt giới hạn");
+});
+$("bowBtn").addEventListener("click",()=>{
+    if(!requireMeditation()) return;
+    setAction(player,"bow");
+    const gained=addMerit(5);
+    sound("bell");
+    floatText(gained>0?"+5 Lễ Phật 🙏":"Đã đạt giới hạn");
+});
+$("chantBtn").addEventListener("click",()=>{
+    if(!requireMeditation()) return;
+    state.chanting=!state.chanting;
+    nextChant=t+.2;
+    syncUI();
+    notice(state.chanting?"Đang tự động tụng kinh.":"Đã dừng tụng kinh.");
+});
+$("meditateBtn").addEventListener("click",()=>{
+    state.meditating=!state.meditating;
+    if(!state.meditating) state.chanting=false;
+    syncUI();
+    notice(state.meditating?"Đã Nhập Thiền.":"Đã Xả Thiền.");
+});
+$("feedBtn").addEventListener("click",()=>{
+    const point=randomPondPoint();
+    feedAt(point.x,point.y);
+});
+$("feedChickenBtn").addEventListener("click",()=>{
+    const point=randomCoopPoint();
+    feedChickenAt(point.x,point.y);
+});
+
+canvas.addEventListener("pointerdown",event=>{
+    const rect=canvas.getBoundingClientRect();
+    const x=event.clientX-rect.left;
+    const y=event.clientY-rect.top;
+
+    if(state.zone==="GATE"){
+        for(const box of gateState.hitboxes){
+            if(x>=box.x && x<=box.x+box.w && y>=box.y && y<=box.y+box.h){
+                box.onClick();
+                return;
+            }
+        }
+        return;
+    }
+
+    if(state.zone==="OUTDOOR"){
+        const p=pond();
+        if(Math.hypot((x-p.x)/p.rx,(y-p.y)/p.ry)<=.95){
+            feedAt(x,y);
+            return;
+        }
+        const c=coop();
+        if(Math.hypot((x-c.x)/c.rx,(y-c.y)/c.ry)<=1.05){
+            feedChickenAt(x,y);
+            return;
+        }
+    }
+    let chosen=null,best=34;
+    for(const seat of seats){
+        const d=Math.hypot(x-seat.x,y-seat.y);
+        if(d<best){best=d;chosen=seat;}
+    }
+    if(!chosen) return;
+    if(chosen.bot&&chosen.id!==state.seatIndex){
+        notice(`Chiếu này đang có ${chosen.bot.name} ngồi.`);
+        return;
+    }
+    state.seatIndex=chosen.id;
+    state.meditating=true;
+    syncUI();
+    floatText("Đã đổi chỗ ngồi",chosen.x,chosen.y-42,"#a7f3d0");
+});
+
+$("chatForm").addEventListener("submit",event=>{
+    event.preventDefault();
+    const value=$("chatInput").value.trim();
+    if(!value) return;
+    $("chatInput").value="";
+    const lower=value.toLowerCase();
+    if(lower==="/test"||lower==="như lai thần chưởng"){
+        state.tier=4;
+        player.tier=4;
+        writeStorage("user_title_tier",4);
+        addMerit(50000);
+        palmStart=t;
+        palmUntil=t+2.7;
+        sound("palm");
+        for(const bot of bots){
+            if(bot.mode==="SIT") setAction(bot,"bow");
+        }
+        syncUI();
+        notice("Bí thuật kích hoạt: Phật Hoàng Toàn Giác +50.000 Công Đức!");
+        return;
+    }
+    player.chat=value;
+    player.chatUntil=t+4.5;
+    sound("bead");
+});
+
+/* ================= HỒ SƠ VÀ BẢNG VÀNG ================= */
+function renderColorPicker() {
+    const wrap=$("colorPicker");
+    wrap.innerHTML="";
+    COLORS.forEach((c,index)=>{
+        const b=document.createElement("button");
+        b.type="button";
+        b.className="color-button"+(index===draftColor?" selected":"");
+        b.style.background=c.body;
+        b.title=c.name;
+        b.setAttribute("aria-label","Màu "+c.name);
+        b.addEventListener("click",()=>{
+            draftColor=index;
+            renderColorPicker();
+        });
+        wrap.appendChild(b);
+    });
+}
+$("profileBtn").addEventListener("click",()=>{
+    $("nameInput").value=state.name;
+    draftColor=state.color;
+    renderColorPicker();
+    openModal("profileModal");
+});
+$("profileForm").addEventListener("submit",event=>{
+    event.preventDefault();
+    state.name=$("nameInput").value.trim().slice(0,20)||"Hành Giả";
+    state.color=draftColor;
+    player.name=state.name;
+    player.color=state.color;
+    writeStorage("player_name",state.name);
+    writeStorage("player_color",state.color);
+    closeModal("profileModal");
+    notice("Đã lưu Đạo Hiệu.");
+});
+
+$("leaderBtn").addEventListener("click",()=>{
+    const list=[
+        {name:state.name,merit:state.merit,title:PLAYER_TITLES[state.tier],me:true},
+        {name:"Thích Tâm An",merit:28500,title:NPC_TITLES[4]},
+        {name:"Liên Hoa Cư Sĩ",merit:19400,title:NPC_TITLES[3]},
+        {name:"Trúc Lâm Khách",merit:12300,title:NPC_TITLES[2]},
+        {name:"Mây Thong Dong",merit:6800,title:NPC_TITLES[1]},
+        {name:"Vô Ưu Khách",merit:2400,title:NPC_TITLES[0]}
+    ].sort((a,b)=>b.merit-a.merit);
+    const wrap=$("leaderList");
+    wrap.innerHTML="";
+    list.forEach((item,idx)=>{
+        const row=document.createElement("div");
+        row.className="rank-row"+(item.me?" me":"");
+        const left=document.createElement("div");
+        const strong=document.createElement("strong");
+        strong.textContent=`#${idx+1} ${item.name}`;
+        const sub=document.createElement("div");
+        sub.className="small";
+        sub.textContent=item.title;
+        left.append(strong,sub);
+        const right=document.createElement("strong");
+        right.textContent=item.merit.toLocaleString("vi-VN")+" ✨";
+        row.append(left,right);
+        wrap.appendChild(row);
+    });
+    openModal("leaderModal");
+});
+
+/* ================= KHẢO THÍ 20 CÂU ================= */
+const QUESTIONS = [
+[
+"Tứ Diệu Đế gồm những chân lý nào?",
+["Khổ, Tập, Diệt, Đạo","Sinh, Lão, Bệnh, Tử","Giới, Định, Tuệ, Giải thoát","Từ, Bi, Hỷ, Xả"],
+0,"Tứ Diệu Đế là Khổ đế, Tập đế, Diệt đế và Đạo đế."
+],[
+"Bát Chánh Đạo thuộc phần nào trong Tứ Diệu Đế?",
+["Khổ đế","Tập đế","Diệt đế","Đạo đế"],
+3,"Bát Chánh Đạo là con đường đưa đến sự chấm dứt khổ, thuộc Đạo đế."
+],[
+"Tam Học căn bản trong Phật giáo là gì?",
+["Bi, Trí, Dũng","Giới, Định, Tuệ","Thân, Khẩu, Ý","Văn, Tư, Tu"],
+1,"Giới giúp phòng hộ, Định làm tâm vững, Tuệ thấy rõ thực tướng."
+],[
+"Ngũ Giới của người cư sĩ không bao gồm điều nào sau đây?",
+["Không sát sinh","Không trộm cắp","Không nói dối","Không ăn chiều"],
+3,"Không ăn phi thời thuộc Bát Quan Trai giới, không nằm trong Ngũ Giới căn bản."
+],[
+"Tứ Vô Lượng Tâm gồm những phẩm chất nào?",
+["Từ, Bi, Hỷ, Xả","Tín, Tấn, Niệm, Định","Thành, Tín, Nhân, Hòa","Không, Vô tướng, Vô tác, Xả"],
+0,"Tứ Vô Lượng Tâm là Từ, Bi, Hỷ và Xả."
+],[
+"Tam Bảo trong Phật giáo là gì?",
+["Giới, Định, Tuệ","Phật, Pháp, Tăng","Thiên, Địa, Nhân","Thân, Tâm, Trí"],
+1,"Quy y Tam Bảo là quay về nương tựa Phật, Pháp và Tăng."
+],[
+"Luật Nhân Quả nhấn mạnh điều gì?",
+["Mọi việc do ngẫu nhiên","Hành động có tác ý tạo nhân và dẫn đến quả khi đủ duyên","Quả báo cố định không thể chuyển","Chỉ lời nói mới tạo nghiệp"],
+1,"Nghiệp gắn với tác ý; nhân gặp đủ duyên sẽ sinh quả."
+],[
+"Lục Độ Ba-la-mật của Bồ-tát đạo bắt đầu bằng hạnh nào?",
+["Tinh tấn","Thiền định","Bố thí","Trí tuệ"],
+2,"Sáu ba-la-mật gồm: Bố thí, Trì giới, Nhẫn nhục, Tinh tấn, Thiền định, Trí tuệ."
+],[
+"Vô thường trong Phật học có ý nghĩa gần nhất là gì?",
+["Không có gì tồn tại","Mọi pháp hữu vi luôn biến đổi theo duyên","Con người không cần cố gắng","Chỉ cảnh vật bên ngoài mới đổi thay"],
+1,"Các pháp do duyên sinh đều biến chuyển, không đứng yên bất biến."
+],[
+"Vô ngã giúp hành giả quán chiếu điều gì?",
+["Không có trách nhiệm đạo đức","Các pháp không có tự tính độc lập, bất biến","Mọi suy nghĩ đều sai","Không cần tu tập"],
+1,"Quán vô ngã giúp buông bớt chấp thủ vào cái tôi cố định."
+],[
+"Chánh Niệm trong Bát Chánh Đạo là gì?",
+["Ghi nhớ thật nhiều câu chuyện","Tỉnh giác, biết rõ thân-thọ-tâm-pháp trong hiện tại","Chỉ ngồi yên không làm việc","Suy tính chuyện tương lai"],
+1,"Chánh niệm là sự tỉnh thức và ghi nhận rõ ràng trong giây phút hiện tại."
+],[
+"Chánh Nghiệp hướng dẫn điều gì?",
+["Hành động thân chân chánh, tránh gây tổn hại","Chỉ làm việc lớn","Tránh giao tiếp với mọi người","Tập trung tích lũy tài sản"],
+0,"Chánh nghiệp là hành động thân thiện lành, không sát sinh, trộm cắp, tà hạnh."
+],[
+"Chánh Ngữ được thể hiện qua cách nói nào?",
+["Nói nhiều để thuyết phục","Nói lời chân thật, hòa giải, ái ngữ và hữu ích","Giữ im lặng tuyệt đối trong mọi hoàn cảnh","Nói lời sắc bén để thắng tranh luận"],
+1,"Chánh ngữ tránh vọng ngữ, lưỡng thiệt, ác khẩu, ỷ ngữ."
+],[
+"Ba độc căn bản làm khởi sinh phiền não là gì?",
+["Tham, Sân, Si","Bi, Trí, Dũng","Lười, Sợ, Quên","Buồn, Giận, Lo"],
+0,"Tham, Sân, Si gọi là tam độc."
+],[
+"Ý nghĩa chính của tiếng mõ trong thời khóa tụng niệm là gì?",
+["Tạo âm thanh cho vui","Giữ nhịp và nhắc tâm tỉnh thức, nhiếp niệm","Thay thế lời kinh","Báo giờ ăn cơm"],
+1,"Tiếng mõ giúp đại chúng hòa nhịp và nhiếp tâm tỉnh giác."
+],[
+"Phóng sinh đúng tinh thần từ bi cần gắn với điều gì?",
+["Chọn nơi phù hợp, tránh gây hại môi trường và sinh vật","Thả càng nhiều càng tốt ở bất cứ đâu","Mua loài xâm hại để thả","Làm hình thức để khoe"],
+0,"Từ bi cần đi cùng trí tuệ, bảo vệ sự sống thực chất và hệ sinh thái."
+],[
+"Trong thiền tập, khi vọng tưởng khởi lên thì cách ứng xử phù hợp là gì?",
+["Tức giận với bản thân","Nhận biết nhẹ nhàng rồi quay lại hơi thở hoặc đề mục","Bỏ buổi thiền ngay","Cố ép tâm không được nghĩ gì"],
+1,"Nhận diện không phán xét và trở về đề mục giúp tâm lắng dịu tự nhiên."
+],[
+"Duyên khởi dạy rằng các hiện tượng hình thành như thế nào?",
+["Tự nhiên sinh không cần điều kiện","Do nhiều nhân duyên tương thuộc mà sinh khởi và hoại diệt","Bất biến từ đầu","Tách biệt hoàn toàn với nhau"],
+1,"Cái này có vì cái kia có; các pháp nương nhau mà biểu hiện."
+],[
+"Hạnh Nhẫn Nhục trong tu học mang nghĩa nào?",
+["Cam chịu tiêu cực","Vững vàng, kham nhẫn và chuyển hóa sân hận bằng hiểu biết","Tránh mọi thử thách","Giữ cơn giận trong lòng"],
+1,"Nhẫn nhục là sức mạnh nội tâm không để sân giận chi phối."
+],[
+"Hồi hướng công đức có ý nghĩa gì?",
+["Giữ phước cho riêng mình","Mở rộng tâm lành, hướng điều thiện đến muôn loài cùng an lạc","Đổi công đức lấy danh tiếng","Kết thúc việc thiện để không làm nữa"],
+1,"Hồi hướng giúp tâm rộng mở, nuôi dưỡng lòng vị tha và từ bi."
+]
+];
+
+let quiz = {active:false,index:0,score:0,answered:false};
+function renderQuiz() {
+    $("quizProgress").textContent=`Câu ${quiz.index+1}/${QUESTIONS.length}`;
+    $("quizScore").textContent=`Đúng: ${quiz.score}`;
+    $("quizExplanation").hidden=true;
+    $("quizResult").hidden=true;
+    $("nextQuizBtn").hidden=true;
+    const [q,options]=QUESTIONS[quiz.index];
+    $("quizQuestion").textContent=q;
+    const wrap=$("quizOptions");
+    wrap.innerHTML="";
+    options.forEach((opt,idx)=>{
+        const b=document.createElement("button");
+        b.type="button";
+        b.className="option";
+        b.textContent=`${String.fromCharCode(65+idx)}. ${opt}`;
+        b.addEventListener("click",()=>answerQuiz(idx));
+        wrap.appendChild(b);
+    });
+}
+function answerQuiz(choice) {
+    if(quiz.answered) return;
+    quiz.answered=true;
+    const [,,correct,explain]=QUESTIONS[quiz.index];
+    const buttons=[...$("quizOptions").querySelectorAll("button")];
+    buttons.forEach((b,idx)=>{
+        b.disabled=true;
+        if(idx===correct) b.classList.add("correct");
+        else if(idx===choice) b.classList.add("wrong");
+    });
+    if(choice===correct){
+        quiz.score++;
+        sound("bead");
+    }else{
+        sound("mo");
+    }
+    $("quizScore").textContent=`Đúng: ${quiz.score}`;
+    $("quizExplanation").textContent=explain;
+    $("quizExplanation").hidden=false;
+    $("nextQuizBtn").textContent=
+        quiz.index===QUESTIONS.length-1?"Xem kết quả":"Câu tiếp theo";
+    $("nextQuizBtn").hidden=false;
+    $("nextQuizBtn").focus();
+}
+function finishQuiz() {
+    quiz.active=false;
+    $("quizQuestion").textContent="Hoàn tất khảo thí!";
+    $("quizOptions").innerHTML="";
+    $("quizExplanation").hidden=true;
+    $("nextQuizBtn").hidden=true;
+    const s=quiz.score;
+    const tier=s===20?4:s>=18?3:s>=15?2:s>=10?1:0;
+    const reward=s*120+(s===20?3000:0);
+    addMerit(reward);
+    if(tier>state.tier){
+        state.tier=tier;
+        player.tier=tier;
+        writeStorage("user_title_tier",tier);
+    }
+    syncUI();
+    sound("bell");
+    const result=$("quizResult");
+    result.hidden=false;
+    result.innerHTML="";
+    const p1=document.createElement("p");
+    p1.innerHTML=`Bạn trả lời đúng <strong>${s}/20</strong> câu, nhận <strong>+${reward.toLocaleString("vi-VN")} Công Đức</strong>.`;
+    const p2=document.createElement("p");
+    p2.innerHTML=`Danh hiệu đạt được: <strong>${PLAYER_TITLES[tier]}</strong> (Đạo hiệu hiện tại: <strong>${PLAYER_TITLES[state.tier]}</strong>).`;
+    result.append(p1,p2);
+}
+function startNewQuiz() {
+    if(state.merit<1000){
+        notice("Cần ít nhất 1.000 Công Đức để mở lượt khảo thí mới.");
+        return;
+    }
+    addMerit(-1000);
+    quiz={active:true,index:0,score:0,answered:false};
+    renderQuiz();
+    openModal("quizModal");
+}
+$("quizBtn").addEventListener("click",()=>{
+    if(quiz.active){
+        openModal("quizModal");
+        return;
+    }
+    startNewQuiz();
+});
+$("restartQuizBtn").addEventListener("click",startNewQuiz);
+$("nextQuizBtn").addEventListener("click",()=>{
+    if(quiz.index<QUESTIONS.length-1){
+        quiz.index++;
+        quiz.answered=false;
+        renderQuiz();
+    }else{
+        finishQuiz();
+    }
+});
+
+/* ================= TÍNH NĂNG RẠP PHIM & YOUTUBE (HỖ TRỢ CẢ PYTHON SERVER & FILE:///) ================= */
+let ytPopupWindow = null;
+const videoQueue = [
+    {
+        type: "mp4",
+        title: "Big Buck Bunny — Phim Hoạt Hình 3D",
+        url: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
+    },
+    {
+        type: "mp4",
+        title: "Sintel — Hiệp Sĩ Rồng",
+        url: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4"
+    },
+    {
+        type: "mp4",
+        title: "Tears of Steel — Khoa Học Viễn Tưởng",
+        url: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4"
+    }
+];
+
+function extractYouTubeId(url) {
+    const clean = String(url).trim();
+    if (/^[a-zA-Z0-9_-]{11}$/.test(clean)) return clean;
+    const reg = /(?:youtube(?:-nocookie)?\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?|shorts|live)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i;
+    const match = clean.match(reg);
+    return match ? match[1] : null;
+}
+
+function openYouTubePopup(videoId) {
+    const screen = $("cinemaScreen");
+    const rect = screen.getBoundingClientRect();
+    const width = Math.max(420, Math.round(rect.width));
+    const height = Math.max(260, Math.round(rect.height));
+    const left = Math.round(window.screenX + rect.left);
+    const top = Math.round(window.screenY + rect.top + 40);
+    if (ytPopupWindow && !ytPopupWindow.closed) ytPopupWindow.close();
+    ytPopupWindow = window.open(
+        `https://www.youtube.com/watch?v=${videoId}&autoplay=1`,
+        "YouTubeCinemaPopup",
+        `width=${width},height=${height},left=${left},top=${top}`
+    );
+}
+
+function renderCinemaVideo(item) {
+    const container = $("cinemaScreen");
+    if (!container || !item) return;
+    container.innerHTML = "";
+
+    if (item.type === "mp4") {
+        const video = document.createElement("video");
+        video.src = item.url;
+        video.controls = true;
+        video.autoplay = true;
+        video.playsInline = true;
+        video.style.width = "100%";
+        video.style.height = "100%";
+        video.style.objectFit = "cover";
+        video.addEventListener("ended", skipCinemaVideo);
+        container.appendChild(video);
+        video.play().catch(() => {
+            video.muted = true;
+            video.play().catch(() => {});
+        });
+        return;
+    }
+
+    if (item.type === "yt") {
+        if (window.location.protocol === "file:") {
+            container.innerHTML = `
+                <div style="position:relative;width:100%;height:100%;background:#000;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:14px;text-align:center;">
+                    <img src="https://i.ytimg.com/vi/${item.id}/hqdefault.jpg" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0.45;">
+                    <button id="openYtPopupBtn" type="button" style="position:relative;z-index:2;background:#ef4444;border:2px solid #fff;color:#fff;padding:10px 16px;border-radius:999px;font-weight:700;">
+                        ▶️ Mở Trình Phát YouTube Nổi (ID: ${item.id})
+                    </button>
+                    <small style="position:relative;z-index:2;margin-top:8px;color:#fde68a;">(Hoặc mở bằng chay_game.py để phát trực tiếp trong khung)</small>
+                </div>
+            `;
+            container.querySelector("#openYtPopupBtn")?.addEventListener("click", () => openYouTubePopup(item.id));
+        } else {
+            const iframe = document.createElement("iframe");
+            iframe.src = `https://www.youtube.com/embed/${item.id}?autoplay=1&controls=1&rel=0&origin=${encodeURIComponent(window.location.origin)}`;
+            iframe.allow = "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share";
+            iframe.allowFullscreen = true;
+            iframe.referrerPolicy = "strict-origin-when-cross-origin";
+            container.appendChild(iframe);
+        }
+    }
+}
+
+function loadYouTubeAPI() {
+    if (videoQueue.length > 0 && !$("cinemaScreen").hasChildNodes()) {
+        renderCinemaVideo(videoQueue[0]);
+    }
+}
+
+function skipCinemaVideo() {
+    if (!videoQueue.length) return;
+    const first = videoQueue.shift();
+    videoQueue.push(first);
+    renderCinemaVideo(videoQueue[0]);
+    notice("⏭️ Chủ rạp đã chuyển sang video tiếp theo!");
+    sound("bell");
+}
+
+$("toggleScreenBtn").addEventListener("click", () => {
+    if (state.zone !== "CINEMA") return;
+    state.screenVisible = !state.screenVisible;
+    syncUI();
+    if (state.screenVisible) {
+        renderCinemaVideo(videoQueue[0]);
+    } else {
+        $("cinemaScreen").innerHTML = "";
+        if (ytPopupWindow && !ytPopupWindow.closed) ytPopupWindow.close();
+    }
+    notice(state.screenVisible ? "Đã bật màn hình chiếu phim." : "Đã ẩn màn hình chiếu phim.");
+});
+
+$("addVideoBtn").addEventListener("click", () => {
+    const rawUrl = $("ytInput").value.trim();
+    const id = extractYouTubeId(rawUrl);
+    const isDirectVideo = /^https?:\/\/.+\.(mp4|webm|ogg)(\?.*)?$/i.test(rawUrl);
+
+    if (!id && !isDirectVideo) {
+        notice("Link không hợp lệ! Hãy dán link youtube.com/watch?v=... hoặc link .mp4");
+        return;
+    }
+
+    const newItem = id
+        ? { type: "yt", id, title: `YouTube (${id})` }
+        : { type: "mp4", url: rawUrl, title: "Video Trực Tuyến" };
+
+    videoQueue.unshift(newItem);
+    $("ytInput").value = "";
+    state.screenVisible = true;
+    syncUI();
+    renderCinemaVideo(newItem);
+    addMerit(5);
+    floatText("+5 Chiếu Phim 🎬");
+    notice("Đã phát video mới từ đường link bạn vừa thêm!");
+});
+
+$("skipVideoBtn").addEventListener("click", skipCinemaVideo);
+
+$("clapBtn").addEventListener("click", () => {
+    setAction(player, "clap");
+    addMerit(2);
+    sound("bead");
+    floatText("+2 Vỗ Tay 👏");
+    bots.forEach(b => { if (b.mode === "SIT" && Math.random() < 0.5) setAction(b, "clap"); });
+});
+
+$("danceBtn").addEventListener("click", () => {
+    setAction(player, "dance");
+    addMerit(3);
+    sound("mo");
+    floatText("+3 Nhảy Múa 💃");
+});
+
+$("camViewBtn").addEventListener("click", () => {
+    state.firstPerson = !state.firstPerson;
+    document.body.classList.toggle("fpv-mode", state.firstPerson);
+    $("camViewBtn").classList.toggle("active", state.firstPerson);
+    $("camViewBtn").innerHTML = state.firstPerson ? "<span>🌐</span>Toàn Rạp" : "<span>🎥</span>Góc Nhìn";
+    notice(state.firstPerson ? "Đang ở Góc nhìn cá nhân (tập trung vào ghế của bạn và màn hình)." : "Đang ở Góc nhìn toàn rạp.");
+});
+
+/* ================= VÒNG LẶP CHÍNH ================= */
+let lastTime = performance.now();
+function loop(now) {
+    const dt = clamp((now - lastTime) / 1000, 0, .08);
+    lastTime = now;
+    t += dt;
+
+    if (state.zone === "INDOOR" && state.chanting && state.meditating && t >= nextChant) {
+        nextChant = t + 2.3;
+        setAction(player, "mo");
+        const gained = addMerit(1);
+        sound("mo");
+        floatText(gained > 0 ? "+1 Tụng Kinh 📜" : "Đã đạt giới hạn");
+    }
+
+    updateBots(dt);
+    updateEffects(dt);
+    draw();
+    requestAnimationFrame(loop);
+}
+
+function boot() {
+    saveMerit();
+    syncUI();
+    resize();
+    requestAnimationFrame(loop);
+}
+boot();
+</script>
+</body>
+</html>
