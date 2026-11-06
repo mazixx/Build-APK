@@ -439,6 +439,8 @@ body.fpv-mode #cinemaScreen {
 "use strict";
 
 /* ================= TIỆN ÍCH VÀ BÁO LỖI ================= */
+window.zaloJSV2 = window.zaloJSV2 || {};
+
 const $ = id => document.getElementById(id);
 const clamp = (n, min, max) => Math.max(min, Math.min(max, n));
 const rand = (min, max) => min + Math.random() * (max - min);
